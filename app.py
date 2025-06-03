@@ -21,6 +21,7 @@ def calculate_trading_analytics(transactions_df):
     # Calculate trade outcomes
     trade_groups = transactions_df.groupby('Trade_Group')
     completed_trades = []
+    daily_returns = []  # For calculating risk metrics
 
     for group_name, group in trade_groups:
         if len(group) >= 2:  # Only consider trades that have been closed
@@ -46,6 +47,15 @@ def calculate_trading_analytics(transactions_df):
             # Determine if it was a winning trade
             is_win = pnl > 0
 
+            # Calculate daily return for risk metrics
+            days_held = (last_trade['Date'] - first_trade['Date']).days
+            if days_held > 0:
+                daily_return = pnl / (abs(entry_amount) * days_held)  # Simple daily return
+                daily_returns.append({
+                    'date': last_trade['Date'],
+                    'return': daily_return
+                })
+
             completed_trades.append({
                 'Symbol': first_trade['Symbol'],
                 'Description': first_trade['Description'],
@@ -56,11 +66,12 @@ def calculate_trading_analytics(transactions_df):
                 'PnL': pnl,
                 'Is_Win': is_win,
                 'Type': first_trade['Description'].split()[-1],  # P or C
-                'Days_Held': (last_trade['Date'] - first_trade['Date']).days
+                'Days_Held': days_held
             })
 
     if completed_trades:
         trades_df = pd.DataFrame(completed_trades)
+        returns_df = pd.DataFrame(daily_returns)
 
         # Calculate overall statistics
         analytics['total_trades'] = len(trades_df)
@@ -73,6 +84,36 @@ def calculate_trading_analytics(transactions_df):
         analytics['avg_pnl'] = trades_df['PnL'].mean()
         analytics['max_profit'] = trades_df['PnL'].max()
         analytics['max_loss'] = trades_df['PnL'].min()
+
+        # Risk Metrics
+        if not returns_df.empty:
+            # Calculate cumulative returns for drawdown
+            returns_df = returns_df.sort_values('date')
+            returns_df['cumulative_return'] = (1 + returns_df['return']).cumprod()
+            returns_df['rolling_max'] = returns_df['cumulative_return'].cummax()
+            returns_df['drawdown'] = (returns_df['cumulative_return'] - returns_df['rolling_max']) / returns_df['rolling_max']
+
+            # Max and Average Drawdown
+            analytics['max_drawdown'] = abs(returns_df['drawdown'].min()) * analytics['total_pnl']
+            analytics['avg_drawdown'] = abs(returns_df['drawdown'].mean()) * analytics['total_pnl']
+
+            # Return Volatility (annualized)
+            analytics['return_volatility'] = returns_df['return'].std() * (252 ** 0.5) * 100  # Annualized volatility as percentage
+
+            # Sharpe Ratio (assuming risk-free rate of 0 for simplicity)
+            avg_daily_return = returns_df['return'].mean()
+            daily_volatility = returns_df['return'].std()
+            if daily_volatility != 0:
+                sharpe_ratio = (avg_daily_return / daily_volatility) * (252 ** 0.5)  # Annualized Sharpe ratio
+                analytics['sharpe_ratio'] = sharpe_ratio
+            else:
+                analytics['sharpe_ratio'] = 0
+        else:
+            # Set default values if no returns data
+            analytics['max_drawdown'] = 0
+            analytics['avg_drawdown'] = 0
+            analytics['return_volatility'] = 0
+            analytics['sharpe_ratio'] = 0
 
         # Statistics by option type
         type_stats = trades_df.groupby('Type').agg({
@@ -188,7 +229,7 @@ def calculate_option_positions_summary(positions_df):
 
 def parse_trading_data():
     # Read the trading data file
-    with open('data/trading_data.txt', 'r') as file:
+    with open('data/trading_data.tlg', 'r') as file:
         lines = file.readlines()
 
     # Helper function to extract expiration date from option symbol

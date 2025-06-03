@@ -515,6 +515,65 @@
                 </div>
             </div>
 
+            <!-- Risk Metrics -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="bi bi-shield-check"></i> Risk Metrics</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Max Drawdown</h6>
+                                            <h3 class="card-title text-danger">
+                                                ${{ "%.2f"|format(data.trading_analytics.max_drawdown|default(0)) }}
+                                            </h3>
+                                            <small class="text-muted">Largest peak-to-trough decline</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Sharpe Ratio</h6>
+                                            <h3 class="card-title {{ 'text-success' if data.trading_analytics.sharpe_ratio|default(0) > 1 else 'text-warning' }}">
+                                                {{ "%.2f"|format(data.trading_analytics.sharpe_ratio|default(0)) }}
+                                            </h3>
+                                            <small class="text-muted">Risk-adjusted returns (annualized)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Avg Drawdown</h6>
+                                            <h3 class="card-title text-danger">
+                                                ${{ "%.2f"|format(data.trading_analytics.avg_drawdown|default(0)) }}
+                                            </h3>
+                                            <small class="text-muted">Average peak-to-trough decline</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card h-100">
+                                        <div class="card-body">
+                                            <h6 class="card-subtitle mb-2 text-muted">Return Volatility</h6>
+                                            <h3 class="card-title">
+                                                {{ "%.1f"|format(data.trading_analytics.return_volatility|default(0)) }}%
+                                            </h3>
+                                            <small class="text-muted">Standard deviation of returns</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Performance by Option Type -->
             <div class="row mb-4">
                 <div class="col-md-6">
