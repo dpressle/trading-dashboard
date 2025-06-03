@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f1c40f;
+            --light-bg: #f8f9fa;
+            --dark-bg: #2c3e50;
+        }
+
+        body {
+            background-color: #f5f6fa;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+            color: white !important;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+        }
+
+        .section-header {
+            border-bottom: 2px solid var(--light-bg);
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats-card {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .table {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+        }
+
+        .table th {
+            background-color: var(--light-bg);
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .positive {
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .negative {
+            color: var(--danger-color);
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--secondary-color);
+            border: none;
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+            background: none;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .summary-card h3 {
+            font-size: 1.1rem;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .summary-card .value {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .badge {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+        }
+
+        .badge-buy {
+            background-color: var(--success-color);
+        }
+
+        .badge-sell {
+            background-color: var(--danger-color);
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 1rem;
+            }
+
+            .table {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-graph-up"></i> Trading Dashboard
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#"><i class="bi bi-house"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#positions"><i class="bi bi-briefcase"></i> Positions</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#transactions"><i class="bi bi-clock-history"></i> Transactions</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Account Information -->
+        {% if data.account_info is defined %}
+        <div class="section mb-4">
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0"><i class="bi bi-person-circle"></i> Account Information</h2>
+            </div>
+            <div class="row">
+                {% for column in data.account_info.columns %}
+                <div class="col-md-3 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">{{ column }}</h6>
+                            <p class="card-text">{{ data.account_info[column].iloc[0] }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Summary Statistics -->
+        <div class="summary-stats">
+            {% if data.stock_positions is defined %}
+            <div class="summary-card">
+                <h3>Stock Positions</h3>
+                <div class="value">
+                    ${{ "%.2f"|format(data.stock_positions['Amount'].sum()) }}
+                </div>
+                <small class="text-muted">{{ data.stock_positions|length }} positions</small>
+            </div>
+            {% endif %}
+
+            {% if data.option_positions is defined %}
+            <div class="summary-card">
+                <h3>Option Positions</h3>
+                <div class="value {{ 'positive' if data.option_positions_summary.total_value > 0 else 'negative' }}">
+                    ${{ "%.2f"|format(data.option_positions_summary.total_value) }}
+                </div>
+                <small class="text-muted">
+                    {{ data.option_positions_summary.total_positions }} positions
+                    ({{ data.option_positions_summary.long_positions }} long, {{ data.option_positions_summary.short_positions }} short)
+                </small>
+                {% if data.option_positions_summary.total_fees > 0 %}
+                <div class="mt-2">
+                    <small class="text-muted">Total Fees: ${{ "%.2f"|format(data.option_positions_summary.total_fees) }}</small>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if data.stock_transactions is defined %}
+            <div class="summary-card">
+                <h3>Stock Transactions</h3>
+                <div class="value">
+                    ${{ "%.2f"|format(data.stock_transactions['Amount'].sum()) }}
+                </div>
+                <small class="text-muted">{{ data.stock_transactions|length }} transactions</small>
+            </div>
+            {% endif %}
+
+            {% if data.option_transactions is defined %}
+            <div class="summary-card">
+                <h3>Option Transactions</h3>
+                <div class="value {{ 'positive' if data.option_summary.net_pnl > 0 else 'negative' }}">
+                    ${{ "%.2f"|format(data.option_summary.net_pnl) }}
+                </div>
+                <small class="text-muted">
+                    {{ data.option_summary.total_transactions }} transactions
+                    ({{ data.option_summary.closed_positions }} closed, {{ data.option_summary.open_positions }} open)
+                </small>
+                <div class="mt-2">
+                    <small class="text-muted">Total Fees: ${{ "%.2f"|format(data.option_summary.total_fees) }}</small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Positions Section -->
+        <div id="positions" class="section">
+            <div class="section-header">
+                <h2 class="h4 mb-0"><i class="bi bi-briefcase"></i> Current Positions</h2>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" id="positionsTab" role="tablist">
+                {% if data.stock_positions is defined %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button">
+                        <i class="bi bi-bar-chart"></i> Stocks
+                    </button>
+                </li>
+                {% endif %}
+                {% if data.option_positions is defined %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="options-tab" data-bs-toggle="tab" data-bs-target="#options" type="button">
+                        <i class="bi bi-option"></i> Options
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="tab-content" id="positionsTabContent">
+                {% if data.stock_positions is defined %}
+                <div class="tab-pane fade show active" id="stocks">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="stockPositionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in data.stock_positions.iterrows() %}
+                                <tr>
+                                    <td><strong>{{ row['Symbol'] }}</strong></td>
+                                    <td>{{ row['Description'] }}</td>
+                                    <td>{{ row['Quantity'] }}</td>
+                                    <td>${{ "%.2f"|format(row['Price']) }}</td>
+                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['Amount']) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if data.option_positions is defined %}
+                <div class="tab-pane fade" id="options">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="optionPositionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Description</th>
+                                    <th>Expiration</th>
+                                    <th>Strike</th>
+                                    <th>Type</th>
+                                    <th>Quantity</th>
+                                    <th>Premium</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in data.option_positions.iterrows() %}
+                                <tr>
+                                    <td><strong>{{ row['Symbol'] }}</strong></td>
+                                    <td>{{ row['Description'] }}</td>
+                                    <td>{{ row['Expiration'] }}</td>
+                                    <td>${{ "%.2f"|format(row['Strike']) }}</td>
+                                    <td>{{ row['Type'] }}</td>
+                                    <td>{{ row['Quantity'] }}</td>
+                                    <td>${{ "%.2f"|format(row['Premium']) }}</td>
+                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['Amount']) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Transactions Section -->
+        <div id="transactions" class="section">
+            <div class="section-header">
+                <h2 class="h4 mb-0"><i class="bi bi-clock-history"></i> Recent Transactions</h2>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" id="transactionsTab" role="tablist">
+                {% if data.stock_transactions is defined %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="stock-trans-tab" data-bs-toggle="tab" data-bs-target="#stock-trans" type="button">
+                        <i class="bi bi-bar-chart"></i> Stocks
+                    </button>
+                </li>
+                {% endif %}
+                {% if data.option_transactions is defined %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="option-trans-tab" data-bs-toggle="tab" data-bs-target="#option-trans" type="button">
+                        <i class="bi bi-option"></i> Options
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="tab-content" id="transactionsTabContent">
+                {% if data.stock_transactions is defined %}
+                <div class="tab-pane fade show active" id="stock-trans">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="stockTransactionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Symbol</th>
+                                    <th>Action</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in data.stock_transactions.iterrows() %}
+                                <tr>
+                                    <td>{{ row['Date'] }}</td>
+                                    <td><strong>{{ row['Symbol'] }}</strong></td>
+                                    <td>
+                                        <span class="badge {{ 'badge-buy' if row['Action'] == 'BUYTOOPEN' else 'badge-sell' }}">
+                                            {{ row['Action'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ row['Quantity'] }}</td>
+                                    <td>${{ "%.2f"|format(row['Price']) }}</td>
+                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['Amount']) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if data.option_transactions is defined %}
+                <div class="tab-pane fade" id="option-trans">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="optionTransactionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Symbol</th>
+                                    <th>Description</th>
+                                    <th>Expiration</th>
+                                    <th>Strike</th>
+                                    <th>Type</th>
+                                    <th>Action</th>
+                                    <th>Quantity</th>
+                                    <th>Premium</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in data.option_transactions.iterrows() %}
+                                <tr>
+                                    <td>{{ row['Date'] }}</td>
+                                    <td><strong>{{ row['Symbol'] }}</strong></td>
+                                    <td>{{ row['Description'] }}</td>
+                                    <td>{{ row['Expiration'] }}</td>
+                                    <td>${{ "%.2f"|format(row['Strike']) }}</td>
+                                    <td>{{ row['Description'].split()[-1] }}</td>
+                                    <td>
+                                        <span class="badge {{ 'badge-buy' if 'BUY' in row['Action'] else 'badge-sell' }}">
+                                            {{ row['Action'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ row['Quantity'] }}</td>
+                                    <td>${{ "%.2f"|format(row['Price']) }}</td>
+                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['Amount']) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Trading Analytics Section -->
+        {% if data.trading_analytics is defined %}
+        <div id="analytics" class="section">
+            <div class="section-header">
+                <h2 class="h4 mb-0"><i class="bi bi-graph-up-arrow"></i> Trading Analytics</h2>
+            </div>
+
+            <!-- Overall Statistics -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Total Trades</h6>
+                            <h3 class="card-title">{{ data.trading_analytics.total_trades }}</h3>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-success">Wins: {{ data.trading_analytics.winning_trades }}</small>
+                                <small class="text-danger">Losses: {{ data.trading_analytics.losing_trades }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Win Rate</h6>
+                            <h3 class="card-title">{{ "%.1f"|format(data.trading_analytics.win_rate) }}%</h3>
+                            <small class="text-muted">Successful trades</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Total P&L</h6>
+                            <h3 class="card-title {{ 'text-success' if data.trading_analytics.total_pnl > 0 else 'text-danger' }}">
+                                ${{ "%.2f"|format(data.trading_analytics.total_pnl) }}
+                            </h3>
+                            <small class="text-muted">Average: ${{ "%.2f"|format(data.trading_analytics.avg_pnl) }}</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-2 text-muted">Avg Holding Period</h6>
+                            <h3 class="card-title">{{ "%.1f"|format(data.trading_analytics.avg_holding_period) }} days</h3>
+                            <small class="text-muted">Per trade</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance by Option Type -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Performance by Option Type</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Count</th>
+                                            <th>Win Rate</th>
+                                            <th>Total P&L</th>
+                                            <th>Avg P&L</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for type, stats in data.trading_analytics.type_stats.items() %}
+                                        <tr>
+                                            <td><strong>{{ type }}</strong></td>
+                                            <td>{{ stats.Count }}</td>
+                                            <td>{{ "%.1f"|format(stats.Win_Rate) }}%</td>
+                                            <td class="{{ 'text-success' if stats.Total_PnL > 0 else 'text-danger' }}">
+                                                ${{ "%.2f"|format(stats.Total_PnL) }}
+                                            </td>
+                                            <td class="{{ 'text-success' if stats.Avg_PnL > 0 else 'text-danger' }}">
+                                                ${{ "%.2f"|format(stats.Avg_PnL) }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Holding Period Analysis -->
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Performance by Holding Period</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Period</th>
+                                            <th>Count</th>
+                                            <th>Win Rate</th>
+                                            <th>Total P&L</th>
+                                            <th>Avg P&L</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for period, stats in data.trading_analytics.holding_period_stats.items() %}
+                                        <tr>
+                                            <td><strong>{{ period }}</strong></td>
+                                            <td>{{ stats.Count }}</td>
+                                            <td>{{ "%.1f"|format(stats.Win_Rate) }}%</td>
+                                            <td class="{{ 'text-success' if stats.Total_PnL > 0 else 'text-danger' }}">
+                                                ${{ "%.2f"|format(stats.Total_PnL) }}
+                                            </td>
+                                            <td class="{{ 'text-success' if stats.Avg_PnL > 0 else 'text-danger' }}">
+                                                ${{ "%.2f"|format(stats.Avg_PnL) }}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Best and Worst Trades -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Best Trades</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Description</th>
+                                            <th>P&L</th>
+                                            <th>Days Held</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for trade in data.trading_analytics.best_trades %}
+                                        <tr>
+                                            <td><strong>{{ trade.Symbol }}</strong></td>
+                                            <td>{{ trade.Description }}</td>
+                                            <td class="text-success">${{ "%.2f"|format(trade.PnL) }}</td>
+                                            <td>{{ trade.Days_Held }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Worst Trades</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Symbol</th>
+                                            <th>Description</th>
+                                            <th>P&L</th>
+                                            <th>Days Held</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for trade in data.trading_analytics.worst_trades %}
+                                        <tr>
+                                            <td><strong>{{ trade.Symbol }}</strong></td>
+                                            <td>{{ trade.Description }}</td>
+                                            <td class="text-danger">${{ "%.2f"|format(trade.PnL) }}</td>
+                                            <td>{{ trade.Days_Held }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Add Analytics to Navigation -->
+        <script>
+            // Add Analytics link to navigation
+            document.addEventListener('DOMContentLoaded', function() {
+                const navList = document.querySelector('#navbarNav .navbar-nav');
+                if (navList && document.querySelector('#analytics')) {
+                    const analyticsLink = document.createElement('li');
+                    analyticsLink.className = 'nav-item';
+                    analyticsLink.innerHTML = `
+                        <a class="nav-link" href="#analytics">
+                            <i class="bi bi-graph-up-arrow"></i> Analytics
+                        </a>
+                    `;
+                    navList.appendChild(analyticsLink);
+                }
+            });
+        </script>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTables
+            $('#stockPositionsTable, #optionPositionsTable, #stockTransactionsTable, #optionTransactionsTable').DataTable({
+                pageLength: 10,
+                order: [[0, 'desc']],
+                language: {
+                    search: "Filter records:"
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+            });
+
+            // Smooth scrolling for navigation
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
