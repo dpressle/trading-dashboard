@@ -2,7 +2,7 @@ from flask import Flask, render_template, request
 import pandas as pd
 import os
 import glob
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
@@ -228,6 +228,56 @@ def calculate_option_positions_summary(positions_df):
 
     return summary
 
+def calculate_expiration_alerts(positions_df):
+    """Calculate alerts for upcoming option expirations."""
+    if positions_df is None or positions_df.empty:
+        return []
+
+    alerts = []
+    today = datetime.now()
+
+    # Filter for option positions only
+    option_positions = positions_df[positions_df['Type'].isin(['P', 'C'])]
+
+    for _, position in option_positions.iterrows():
+        try:
+            # Extract expiration date from description
+            desc_parts = position['Description'].split()
+            if len(desc_parts) >= 2:
+                exp_date_str = desc_parts[1]  # e.g., "04APR25"
+                exp_date = datetime.strptime(exp_date_str, '%d%b%y')
+
+                # Calculate days until expiration
+                days_to_exp = (exp_date - today).days
+
+                # Only include positions that haven't expired
+                if days_to_exp >= 0:
+                    # Calculate alert level
+                    if days_to_exp <= 3:
+                        alert_level = 'danger'
+                    elif days_to_exp <= 7:
+                        alert_level = 'warning'
+                    else:
+                        alert_level = 'info'
+
+                    alerts.append({
+                        'symbol': position['Symbol'],
+                        'description': position['Description'],
+                        'expiration_date': exp_date.strftime('%Y-%m-%d'),
+                        'days_to_expiration': days_to_exp,
+                        'quantity': position['Quantity'],
+                        'strike': position['Strike'],
+                        'type': position['Type'],
+                        'premium': position['Premium'],
+                        'alert_level': alert_level
+                    })
+        except (ValueError, IndexError):
+            continue
+
+    # Sort alerts by days to expiration
+    alerts.sort(key=lambda x: x['days_to_expiration'])
+    return alerts
+
 def get_available_data_files():
     """Get list of available .tlg files in the data directory."""
     return [os.path.basename(f) for f in glob.glob('data/*.tlg')]
@@ -354,6 +404,8 @@ def parse_trading_data(filename='trading_data.tlg'):
 
     if 'option_positions' in dfs:
         dfs['option_positions_summary'] = calculate_option_positions_summary(dfs['option_positions'])
+        # Add expiration alerts
+        dfs['expiration_alerts'] = calculate_expiration_alerts(dfs['option_positions'])
 
     return dfs
 

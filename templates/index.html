@@ -234,6 +234,62 @@
         </div>
         {% endif %}
 
+        <!-- Expiration Alerts -->
+        {% if data.expiration_alerts is defined and data.expiration_alerts %}
+        <div class="section mb-4">
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Expiration Alerts
+                    <span class="badge bg-danger ms-2">{{ data.expiration_alerts|length }}</span>
+                </h2>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Description</th>
+                            <th>Expiration</th>
+                            <th>Days Left</th>
+                            <th>Quantity</th>
+                            <th>Strike</th>
+                            <th>Type</th>
+                            <th>Premium</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alert in data.expiration_alerts %}
+                        <tr class="table-{{ alert.alert_level }}">
+                            <td><strong>{{ alert.symbol }}</strong></td>
+                            <td>{{ alert.description }}</td>
+                            <td>{{ alert.expiration_date }}</td>
+                            <td>
+                                <span class="badge bg-{{ alert.alert_level }}">
+                                    {{ alert.days_to_expiration }} days
+                                </span>
+                            </td>
+                            <td>{{ alert.quantity }}</td>
+                            <td>${{ "%.2f"|format(alert.strike) }}</td>
+                            <td>{{ alert.type }}</td>
+                            <td>${{ "%.2f"|format(alert.premium) }}</td>
+                            <td>
+                                {% if alert.days_to_expiration <= 3 %}
+                                <span class="badge bg-danger">Expiring Soon!</span>
+                                {% elif alert.days_to_expiration <= 7 %}
+                                <span class="badge bg-warning">Expiring This Week</span>
+                                {% else %}
+                                <span class="badge bg-info">Upcoming</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Summary Statistics -->
         <div class="summary-stats">
             {% if data.stock_positions is defined %}
