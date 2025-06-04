@@ -178,9 +178,39 @@
                         <a class="nav-link" href="#transactions"><i class="bi bi-clock-history"></i> Transactions</a>
                     </li>
                 </ul>
+                <!-- File Selector -->
+                <div class="d-flex align-items-center ms-3">
+                    <div class="input-group">
+                        <label class="input-group-text" for="dataFileSelect">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </label>
+                        <select class="form-select" id="dataFileSelect" style="width: auto;">
+                            {% for file in data.available_files %}
+                            <option value="{{ file }}" {% if file == data.selected_file %}selected{% endif %}>
+                                {{ file }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: white; text-align: center; padding: 10px; z-index: 1000;">
+        Loading data...
+    </div>
+
+    <!-- Error Message -->
+    {% if error is defined and error %}
+    <div class="container-fluid">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <strong>Error:</strong> {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="container-fluid py-4">
         <!-- Account Information -->
@@ -756,6 +786,18 @@
                     search: "Filter records:"
                 },
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+            });
+
+            // Handle file selection change
+            $('#dataFileSelect').on('change', function() {
+                const selectedFile = $(this).val();
+                if (selectedFile) {
+                    // Show loading indicator
+                    $('#loadingIndicator').show();
+
+                    // Redirect to the same page with the selected file
+                    window.location.href = window.location.pathname + '?data_file=' + encodeURIComponent(selectedFile);
+                }
             });
 
             // Smooth scrolling for navigation

@@ -1,6 +1,7 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import pandas as pd
 import os
+import glob
 from datetime import datetime
 
 app = Flask(__name__)
@@ -227,9 +228,14 @@ def calculate_option_positions_summary(positions_df):
 
     return summary
 
-def parse_trading_data():
+def get_available_data_files():
+    """Get list of available .tlg files in the data directory."""
+    return [os.path.basename(f) for f in glob.glob('data/*.tlg')]
+
+def parse_trading_data(filename='trading_data.tlg'):
+    """Parse trading data from the specified file."""
     # Read the trading data file
-    with open('data/trading_data.tlg', 'r') as file:
+    with open(os.path.join('data', filename), 'r') as file:
         lines = file.readlines()
 
     # Helper function to extract expiration date from option symbol
@@ -353,7 +359,24 @@ def parse_trading_data():
 
 @app.route('/')
 def index():
-    trading_data = parse_trading_data()
+    # Get the requested file from query parameters, default to first available file
+    available_files = get_available_data_files()
+    if not available_files:
+        return render_template('index.html', error="No data files found in data directory")
+
+    requested_file = request.args.get('data_file')
+    if requested_file and requested_file in available_files:
+        selected_file = requested_file
+    else:
+        selected_file = available_files[0]  # Default to first file if none selected or invalid
+
+    # Parse the selected file
+    trading_data = parse_trading_data(selected_file)
+
+    # Add the list of available files to the template context
+    trading_data['available_files'] = available_files
+    trading_data['selected_file'] = selected_file
+
     return render_template('index.html', data=trading_data)
 
 if __name__ == '__main__':
