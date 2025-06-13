@@ -6,12 +6,43 @@ from datetime import datetime, timedelta
 
 app = Flask(__name__)
 
-def calculate_trading_analytics(transactions_df):
+def calculate_trading_analytics(transactions_df, start_date=None, end_date=None):
     """Calculate various trading analytics from the transactions data."""
     analytics = {}
 
     # Convert date strings to datetime
     transactions_df['Date'] = pd.to_datetime(transactions_df['Date'], format='%Y%m%d')
+
+    # Apply date filtering if provided
+    if start_date:
+        start_date = pd.to_datetime(start_date)
+        transactions_df = transactions_df[transactions_df['Date'] >= start_date]
+
+    if end_date:
+        end_date = pd.to_datetime(end_date)
+        transactions_df = transactions_df[transactions_df['Date'] <= end_date]
+
+    # Return empty analytics if no data after filtering
+    if transactions_df.empty:
+        return {
+            'total_trades': 0,
+            'winning_trades': 0,
+            'losing_trades': 0,
+            'win_rate': 0,
+            'total_pnl': 0,
+            'avg_pnl': 0,
+            'max_profit': 0,
+            'max_loss': 0,
+            'max_drawdown': 0,
+            'avg_drawdown': 0,
+            'return_volatility': 0,
+            'sharpe_ratio': 0,
+            'type_stats': {},
+            'best_trades': [],
+            'worst_trades': [],
+            'avg_holding_period': 0,
+            'holding_period_stats': {}
+        }
 
     # Group trades by symbol, expiration, strike, and type
     transactions_df['Trade_Group'] = transactions_df.apply(
@@ -148,16 +179,34 @@ def calculate_trading_analytics(transactions_df):
 
     return analytics
 
-def calculate_option_summary(transactions_df):
+def calculate_option_summary(transactions_df, start_date=None, end_date=None):
     """Calculate summary statistics for option transactions based on their type."""
+    # Apply date filtering if provided
+    if start_date or end_date:
+        # Ensure Date column is datetime
+        if 'Date' not in transactions_df.columns or not pd.api.types.is_datetime64_any_dtype(transactions_df['Date']):
+            transactions_df['Date'] = pd.to_datetime(transactions_df['Date'], format='%Y%m%d')
+
+        if start_date:
+            start_date = pd.to_datetime(start_date)
+            transactions_df = transactions_df[transactions_df['Date'] >= start_date]
+
+        if end_date:
+            end_date = pd.to_datetime(end_date)
+            transactions_df = transactions_df[transactions_df['Date'] <= end_date]
+
     summary = {
         'total_transactions': len(transactions_df),
         'total_premium': 0,
-        'total_fees': transactions_df['Fee'].sum(),
+        'total_fees': transactions_df['Fee'].sum() if not transactions_df.empty else 0,
         'net_pnl': 0,
         'open_positions': 0,
         'closed_positions': 0
     }
+
+    # Return early if no transactions after filtering
+    if transactions_df.empty:
+        return summary
 
     # Group by trade identifier (symbol + expiration + strike + type)
     transactions_df['Trade_Group'] = transactions_df.apply(
@@ -278,6 +327,57 @@ def calculate_expiration_alerts(positions_df):
     alerts.sort(key=lambda x: x['days_to_expiration'])
     return alerts
 
+def apply_date_filter(trading_data, start_date=None, end_date=None):
+    """Apply date filtering to the trading data and recalculate analytics."""
+    if not start_date and not end_date:
+        return trading_data
+
+    # Filter option transactions if they exist
+    if 'option_transactions' in trading_data:
+        original_transactions = trading_data['option_transactions'].copy()
+
+        # Ensure Date column is datetime
+        if 'Date' in original_transactions.columns:
+            original_transactions['Date'] = pd.to_datetime(original_transactions['Date'], format='%Y%m%d')
+
+            # Apply date filtering
+            if start_date:
+                start_date_dt = pd.to_datetime(start_date)
+                original_transactions = original_transactions[original_transactions['Date'] >= start_date_dt]
+
+            if end_date:
+                end_date_dt = pd.to_datetime(end_date)
+                original_transactions = original_transactions[original_transactions['Date'] <= end_date_dt]
+
+            # Update the filtered data
+            trading_data['option_transactions'] = original_transactions
+
+            # Recalculate analytics with filtered data
+            trading_data['trading_analytics'] = calculate_trading_analytics(original_transactions, start_date, end_date)
+            trading_data['option_summary'] = calculate_option_summary(original_transactions, start_date, end_date)
+
+    # Filter stock transactions if they exist
+    if 'stock_transactions' in trading_data:
+        original_stock_transactions = trading_data['stock_transactions'].copy()
+
+        # Ensure Date column is datetime
+        if 'Date' in original_stock_transactions.columns:
+            original_stock_transactions['Date'] = pd.to_datetime(original_stock_transactions['Date'], format='%Y%m%d')
+
+            # Apply date filtering
+            if start_date:
+                start_date_dt = pd.to_datetime(start_date)
+                original_stock_transactions = original_stock_transactions[original_stock_transactions['Date'] >= start_date_dt]
+
+            if end_date:
+                end_date_dt = pd.to_datetime(end_date)
+                original_stock_transactions = original_stock_transactions[original_stock_transactions['Date'] <= end_date_dt]
+
+            # Update the filtered data
+            trading_data['stock_transactions'] = original_stock_transactions
+
+    return trading_data
+
 def get_available_data_files():
     """Get list of available .tlg files in the data directory."""
     return [os.path.basename(f) for f in glob.glob('data/*.tlg')]
@@ -397,7 +497,7 @@ def parse_trading_data(filename='trading_data.tlg'):
 
             dfs[section.lower()] = df
 
-    # After creating all DataFrames, calculate analytics and summaries
+        # After creating all DataFrames, calculate analytics and summaries
     if 'option_transactions' in dfs:
         dfs['trading_analytics'] = calculate_trading_analytics(dfs['option_transactions'])
         dfs['option_summary'] = calculate_option_summary(dfs['option_transactions'])
@@ -422,8 +522,58 @@ def index():
     else:
         selected_file = available_files[0]  # Default to first file if none selected or invalid
 
+    # Get date range parameters
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+
     # Parse the selected file
     trading_data = parse_trading_data(selected_file)
+
+    # Apply date filtering if parameters are provided
+    if start_date or end_date:
+        # Filter option transactions
+        if 'option_transactions' in trading_data:
+            original_transactions = trading_data['option_transactions'].copy()
+
+            # Ensure Date column is datetime
+            if 'Date' in original_transactions.columns:
+                original_transactions['Date'] = pd.to_datetime(original_transactions['Date'], format='%Y%m%d')
+
+                # Apply date filtering
+                if start_date:
+                    start_date_dt = pd.to_datetime(start_date)
+                    original_transactions = original_transactions[original_transactions['Date'] >= start_date_dt]
+
+                if end_date:
+                    end_date_dt = pd.to_datetime(end_date)
+                    original_transactions = original_transactions[original_transactions['Date'] <= end_date_dt]
+
+                # Update the filtered data
+                trading_data['option_transactions'] = original_transactions
+
+                # Recalculate analytics with filtered data
+                trading_data['trading_analytics'] = calculate_trading_analytics(original_transactions, start_date, end_date)
+                trading_data['option_summary'] = calculate_option_summary(original_transactions, start_date, end_date)
+
+        # Filter stock transactions if they exist
+        if 'stock_transactions' in trading_data:
+            original_stock_transactions = trading_data['stock_transactions'].copy()
+
+            # Ensure Date column is datetime
+            if 'Date' in original_stock_transactions.columns:
+                original_stock_transactions['Date'] = pd.to_datetime(original_stock_transactions['Date'], format='%Y%m%d')
+
+                # Apply date filtering
+                if start_date:
+                    start_date_dt = pd.to_datetime(start_date)
+                    original_stock_transactions = original_stock_transactions[original_stock_transactions['Date'] >= start_date_dt]
+
+                if end_date:
+                    end_date_dt = pd.to_datetime(end_date)
+                    original_stock_transactions = original_stock_transactions[original_stock_transactions['Date'] <= end_date_dt]
+
+                # Update the filtered data
+                trading_data['stock_transactions'] = original_stock_transactions
 
     # Add the list of available files to the template context
     trading_data['available_files'] = available_files

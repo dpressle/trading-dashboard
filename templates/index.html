@@ -201,6 +201,80 @@
                 font-size: 18px;
             }
         }
+
+        /* Date Range Selector */
+        .date-range-selector {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .date-range-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 150px;
+        }
+
+        .date-input-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .date-input-group input {
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .preset-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .preset-btn {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border: 1px solid var(--accent-color);
+            background: white;
+            color: var(--accent-color);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover, .preset-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .date-range-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .date-input-group {
+                min-width: 100%;
+            }
+
+            .preset-buttons {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -282,7 +356,7 @@
         {% endif %}
 
         <!-- Expiration Alerts -->
-        {% if data.expiration_alerts is defined and data.expiration_alerts %}
+        <!-- {% if data.expiration_alerts is defined and data.expiration_alerts %}
         <div class="section mb-4">
             <div class="section-header d-flex justify-content-between align-items-center">
                 <h2 class="h4 mb-0">
@@ -335,7 +409,47 @@
                 </table>
             </div>
         </div>
-        {% endif %}
+        {% endif %} -->
+
+        <!-- Date Range Selector -->
+        <div class="date-range-selector">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-calendar-range"></i> Date Range Filter
+                </h5>
+                <small class="text-muted" id="dateRangeInfo">
+                    Showing all transactions
+                </small>
+            </div>
+
+            <div class="date-range-controls">
+                <div class="date-input-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" class="form-control">
+                </div>
+
+                <div class="date-input-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" class="form-control">
+                </div>
+
+                <div class="date-input-group">
+                    <button type="button" class="btn btn-primary" id="applyDateRange">
+                        <i class="bi bi-funnel"></i> Apply Filter
+                    </button>
+                </div>
+
+                <div class="preset-buttons">
+                    <button type="button" class="preset-btn" data-days="7">Last 7 Days</button>
+                    <button type="button" class="preset-btn" data-days="30">Last 30 Days</button>
+                    <button type="button" class="preset-btn" data-days="90">Last 3 Months</button>
+                    <button type="button" class="preset-btn" data-days="365">Last Year</button>
+                    <button type="button" class="preset-btn" id="clearDateFilter">
+                        <i class="bi bi-x-circle"></i> Clear Filter
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <!-- Summary Statistics -->
         <div class="summary-stats">
@@ -597,7 +711,7 @@
         </div>
 
         <!-- Trading Analytics Section -->
-        {% if data.trading_analytics is defined %}
+        {% if data.trading_analytics is defined and data.trading_analytics.total_trades is defined and data.trading_analytics.total_trades > 0 %}
         <div id="analytics" class="section">
             <div class="section-header">
                 <h2 class="h4 mb-0"><i class="bi bi-graph-up-arrow"></i> Trading Analytics</h2>
@@ -854,6 +968,18 @@
                 </div>
             </div>
         </div>
+        {% elif data.trading_analytics is defined and data.trading_analytics.total_trades is defined and data.trading_analytics.total_trades == 0 %}
+        <!-- No Data Message -->
+        <div id="analytics" class="section">
+            <div class="section-header">
+                <h2 class="h4 mb-0"><i class="bi bi-graph-up-arrow"></i> Trading Analytics</h2>
+            </div>
+            <div class="alert alert-info text-center">
+                <i class="bi bi-info-circle"></i>
+                <h5>No trading data found for the selected date range</h5>
+                <p class="mb-0">Try adjusting your date range or clear the filter to see all transactions.</p>
+            </div>
+        </div>
         {% endif %}
 
         <!-- Add Analytics to Navigation -->
@@ -932,6 +1058,134 @@
                     behavior: 'smooth'
                 });
             });
+
+            // Date Range Selector functionality
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const applyDateRangeBtn = document.getElementById('applyDateRange');
+            const clearDateFilterBtn = document.getElementById('clearDateFilter');
+            const dateRangeInfo = document.getElementById('dateRangeInfo');
+            const presetButtons = document.querySelectorAll('.preset-btn[data-days]');
+
+            // Set default date range to show all data
+            const today = new Date();
+            const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+
+            // Set max date to today
+            startDateInput.max = today.toISOString().split('T')[0];
+            endDateInput.max = today.toISOString().split('T')[0];
+
+            // Function to update date range info
+            function updateDateRangeInfo(startDate, endDate) {
+                if (startDate && endDate) {
+                    dateRangeInfo.textContent = `Showing data from ${startDate} to ${endDate}`;
+                } else {
+                    dateRangeInfo.textContent = 'Showing all transactions';
+                }
+            }
+
+            // Function to format date for display
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            }
+
+            // Handle preset button clicks
+            presetButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const days = parseInt(this.getAttribute('data-days'));
+                    const endDate = new Date();
+                    const startDate = new Date();
+                    startDate.setDate(endDate.getDate() - days);
+
+                    startDateInput.value = startDate.toISOString().split('T')[0];
+                    endDateInput.value = endDate.toISOString().split('T')[0];
+
+                    // Remove active class from all preset buttons
+                    presetButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+
+                    // Apply the filter
+                    applyDateFilter();
+                });
+            });
+
+            // Handle apply date range button click
+            applyDateRangeBtn.addEventListener('click', function() {
+                applyDateFilter();
+            });
+
+            // Handle clear filter button click
+            clearDateFilterBtn.addEventListener('click', function() {
+                startDateInput.value = '';
+                endDateInput.value = '';
+                presetButtons.forEach(btn => btn.classList.remove('active'));
+
+                // Reload page without date parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.delete('start_date');
+                urlParams.delete('end_date');
+
+                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+                window.location.href = newUrl;
+            });
+
+            // Function to apply date filter
+            function applyDateFilter() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate && startDate > endDate) {
+                    alert('Start date cannot be later than end date');
+                    return;
+                }
+
+                // Show loading indicator
+                $('#loadingIndicator').show();
+
+                // Build URL with date parameters
+                const urlParams = new URLSearchParams(window.location.search);
+
+                if (startDate) {
+                    urlParams.set('start_date', startDate);
+                } else {
+                    urlParams.delete('start_date');
+                }
+
+                if (endDate) {
+                    urlParams.set('end_date', endDate);
+                } else {
+                    urlParams.delete('end_date');
+                }
+
+                // Redirect with new parameters
+                const newUrl = window.location.pathname + '?' + urlParams.toString();
+                window.location.href = newUrl;
+            }
+
+            // Initialize date range display from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlStartDate = urlParams.get('start_date');
+            const urlEndDate = urlParams.get('end_date');
+
+            if (urlStartDate) {
+                startDateInput.value = urlStartDate;
+            }
+            if (urlEndDate) {
+                endDateInput.value = urlEndDate;
+            }
+
+            if (urlStartDate || urlEndDate) {
+                updateDateRangeInfo(
+                    urlStartDate ? formatDate(urlStartDate) : 'Beginning',
+                    urlEndDate ? formatDate(urlEndDate) : 'Now'
+                );
+            }
         });
     </script>
 
