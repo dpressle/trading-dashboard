@@ -509,6 +509,62 @@ def parse_trading_data(filename='trading_data.tlg'):
 
     return dfs
 
+def aggregate_complex_option_trades(option_transactions):
+    """
+    Aggregate option transactions into complex (multi-leg) trades.
+    Returns a list of complex trades, each with legs and summary metrics.
+    """
+    if option_transactions is None or option_transactions.empty:
+        return []
+
+    # Ensure Date is datetime
+    option_transactions = option_transactions.copy()
+    option_transactions['Date'] = pd.to_datetime(option_transactions['Date'], format='%Y%m%d', errors='coerce')
+
+    # Group by Symbol and Expiration to find related trades
+    grouped = option_transactions.groupby(['Symbol', 'Expiration'])
+
+    complex_trades = []
+
+    for (symbol, expiration), group in grouped:
+        if len(group) < 2:
+            continue  # Need at least 2 legs for a complex trade
+        # Sort by date
+        group = group.sort_values('Date')
+        # Classify type (very basic)
+        types = set(group['Type'])
+        strikes = set(group['Strike'])
+        trade_type = 'Custom'
+        if len(group) == 2:
+            if len(types) == 1 and len(strikes) == 2:
+                trade_type = 'Vertical Spread'
+            elif len(types) == 2 and len(strikes) == 1:
+                trade_type = 'Straddle'
+            elif len(types) == 2 and len(strikes) == 2:
+                trade_type = 'Strangle'
+        elif len(group) == 4:
+            trade_type = 'Iron Condor'
+        # Aggregate metrics
+        net_amount = group['Amount'].sum()
+        net_fees = group['Fee'].sum() if 'Fee' in group.columns else 0
+        open_date = group['Date'].min()
+        close_date = group['Date'].max()
+        summary = {
+            'Symbol': symbol,
+            'Expiration': expiration,
+            'Open_Date': open_date,
+            'Close_Date': close_date,
+            'Num_Legs': len(group),
+            'Trade_Type': trade_type,
+            'Net_Amount': net_amount,
+            'Net_Fees': net_fees,
+            'Legs': group.to_dict('records'),
+        }
+        complex_trades.append(summary)
+    # Sort by open date descending
+    complex_trades = sorted(complex_trades, key=lambda x: x['Open_Date'], reverse=True)
+    return complex_trades
+
 @app.route('/')
 def index():
     # Get the requested file from query parameters, default to first available file
@@ -578,6 +634,12 @@ def index():
     # Add the list of available files to the template context
     trading_data['available_files'] = available_files
     trading_data['selected_file'] = selected_file
+
+    # Add complex option trades aggregation
+    if 'option_transactions' in trading_data:
+        trading_data['option_complex_trades'] = aggregate_complex_option_trades(trading_data['option_transactions'])
+    else:
+        trading_data['option_complex_trades'] = []
 
     return render_template('index.html', data=trading_data)
 

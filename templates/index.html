@@ -623,6 +623,13 @@
                     </button>
                 </li>
                 {% endif %}
+                {% if data.option_complex_trades is defined and data.option_complex_trades|length > 0 %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="complex-trans-tab" data-bs-toggle="tab" data-bs-target="#complex-trans" type="button">
+                        <i class="bi bi-layers"></i> Complex Option Trades
+                    </button>
+                </li>
+                {% endif %}
             </ul>
 
             <div class="tab-content" id="transactionsTabContent">
@@ -699,6 +706,51 @@
                                     <td>${{ "%.2f"|format(row['Price']) }}</td>
                                     <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
                                         ${{ "%.2f"|format(row['Amount']) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if data.option_complex_trades is defined and data.option_complex_trades|length > 0 %}
+                <div class="tab-pane fade" id="complex-trans">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="complexOptionTradesTable">
+                            <thead>
+                                <tr>
+                                    <th>Open Date</th>
+                                    <th>Close Date</th>
+                                    <th>Symbol</th>
+                                    <th>Expiration</th>
+                                    <th>Type</th>
+                                    <th>Legs</th>
+                                    <th>Net Amount</th>
+                                    <th>Net Fees</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trade in data.option_complex_trades %}
+                                <tr>
+                                    <td>{{ trade.Open_Date.strftime('%Y-%m-%d') if trade.Open_Date else '' }}</td>
+                                    <td>{{ trade.Close_Date.strftime('%Y-%m-%d') if trade.Close_Date else '' }}</td>
+                                    <td><strong>{{ trade.Symbol }}</strong></td>
+                                    <td>{{ trade.Expiration }}</td>
+                                    <td>{{ trade.Trade_Type }}</td>
+                                    <td>{{ trade.Num_Legs }}</td>
+                                    <td class="{{ 'positive' if trade.Net_Amount > 0 else 'negative' }}">${{ '%.2f'|format(trade.Net_Amount) }}</td>
+                                    <td>${{ '%.2f'|format(trade.Net_Fees) }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary view-legs-btn"
+                                                type="button"
+                                                data-legs='{{ trade.Legs | tojson }}'
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#legsModal">
+                                            View Legs
+                                        </button>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -1193,5 +1245,235 @@
     <button type="button" class="back-to-top" id="backToTop" title="Back to Top">
         <i class="bi bi-arrow-up"></i>
     </button>
+
+    <!-- Complex Trade Legs Modal -->
+    <div class="modal fade" id="legsModal" tabindex="-1" aria-labelledby="legsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="legsModalLabel">Complex Trade Legs</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="legsModalBody">
+                    <!-- Legs content will be injected here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.view-legs-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const legs = JSON.parse(this.getAttribute('data-legs'));
+
+                    // Calculate trade metrics
+                    const totalPremium = legs.reduce((sum, leg) => {
+                        // In your data: SELL = negative amount = credit (profit), BUY = positive amount = debit (loss)
+                        return sum + leg.Amount;
+                    }, 0);
+                    const totalFees = legs.reduce((sum, leg) => sum + Math.abs(leg.Fee), 0);
+                    const netAmount = legs.reduce((sum, leg) => sum + leg.Amount, 0);
+                    const realizedPnL = netAmount - totalFees;
+
+                    // Calculate trade duration
+                    const dates = legs.map(leg => new Date(leg.Date)).filter(date => !isNaN(date));
+                    const startDate = new Date(Math.min(...dates));
+                    const endDate = new Date(Math.max(...dates));
+                    const tradeDuration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+                    // Analyze trade structure
+                    const buyLegs = legs.filter(leg => leg.Action.includes('BUY'));
+                    const sellLegs = legs.filter(leg => leg.Action.includes('SELL'));
+                    const calls = legs.filter(leg => leg.Type === 'C');
+                    const puts = legs.filter(leg => leg.Type === 'P');
+
+                    let content = `
+                        <div class="row mb-4">
+                            <!-- Trade Summary Cards -->
+                            <div class="col-md-3 mb-3">
+                                <div class="card ${totalPremium < 0 ? 'bg-success' : 'bg-danger'} text-white">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">$${Math.abs(totalPremium).toFixed(2)}</h4>
+                                        <small>${totalPremium < 0 ? 'Net Credit' : 'Net Debit'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-info text-white">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">$${totalFees.toFixed(2)}</h4>
+                                        <small>Total Fees</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card ${realizedPnL < 0 ? 'bg-success' : 'bg-danger'} text-white">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">$${Math.abs(realizedPnL).toFixed(2)}</h4>
+                                        <small>${realizedPnL < 0 ? 'Profit' : 'Loss'}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-warning text-white">
+                                    <div class="card-body text-center">
+                                        <h4 class="card-title">${tradeDuration} days</h4>
+                                        <small>Trade Duration</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <!-- Trade Structure Analysis -->
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Trade Structure</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Buy Legs:</span>
+                                                    <strong>${buyLegs.length}</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Sell Legs:</span>
+                                                    <strong>${sellLegs.length}</strong>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Calls:</span>
+                                                    <strong>${calls.length}</strong>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Puts:</span>
+                                                    <strong>${puts.length}</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="bi bi-calendar-event"></i> Trade Timeline</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between">
+                                            <span>Start Date:</span>
+                                            <strong>${startDate.toLocaleDateString()}</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>End Date:</span>
+                                            <strong>${endDate.toLocaleDateString()}</strong>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span>Duration:</span>
+                                            <strong>${tradeDuration} days</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Individual Legs -->
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6 class="mb-0"><i class="bi bi-list-ul"></i> Trade Legs (${legs.length} total)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                    `;
+
+                    for (let i = 0; i < legs.length; i++) {
+                        const leg = legs[i];
+                        const dateStr = leg.Date ? new Date(leg.Date).toISOString().slice(0,10) : '';
+                        const actionClass = leg.Action.includes('BUY') ? 'border-success' : 'border-danger';
+                        const actionIcon = leg.Action.includes('BUY') ? 'arrow-up-circle' : 'arrow-down-circle';
+
+                        // In your data: SELL = negative amount = credit (profit), BUY = positive amount = debit (loss)
+                        const isCredit = parseFloat(leg.Amount) < 0; // Negative amount = credit
+                        const creditDebitClass = isCredit ? 'text-success' : 'text-danger';
+                        const creditDebitLabel = isCredit ? 'Credit' : 'Debit';
+                        const netAmount = parseFloat(leg.Amount) - parseFloat(leg.Fee);
+                        const netAmountClass = netAmount < 0 ? 'text-success' : 'text-danger'; // Negative net = profit
+
+                        content += `
+                            <div class="col-md-6 mb-3">
+                                <div class="card ${actionClass}">
+                                    <div class="card-body">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">
+                                                <i class="bi bi-${actionIcon}"></i>
+                                                Leg ${i + 1}
+                                            </h6>
+                                            <span class="badge ${leg.Action.includes('BUY') ? 'bg-success' : 'bg-danger'}">${leg.Action}</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <small class="text-muted">Date</small>
+                                                <div>${dateStr}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Type</small>
+                                                <div>${leg.Type}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Strike</small>
+                                                <div>$${leg.Strike}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Quantity</small>
+                                                <div>${Math.abs(leg.Quantity)}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Premium</small>
+                                                <div>$${leg.Price}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">${creditDebitLabel}</small>
+                                                <div class="${creditDebitClass}">$${Math.abs(leg.Amount).toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                        <div class="row mt-2">
+                                            <div class="col-6">
+                                                <small class="text-muted">Fee</small>
+                                                <div>$${parseFloat(leg.Fee).toFixed(2)}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <small class="text-muted">Net</small>
+                                                <div class="${netAmountClass}">$${Math.abs(netAmount).toFixed(2)}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    content += `
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('legsModalBody').innerHTML = content;
+                });
+            });
+        });
+    </script>
 </body>
 </html>
