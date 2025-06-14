@@ -382,7 +382,7 @@ def get_available_data_files():
     """Get list of available .tlg files in the data directory."""
     return [os.path.basename(f) for f in glob.glob('data/*.tlg')]
 
-def parse_trading_data(filename='trading_data.tlg'):
+def parse_trading_data(filename):
     """Parse trading data from the specified file."""
     # Read the trading data file
     with open(os.path.join('data', filename), 'r') as file:
@@ -569,8 +569,15 @@ def aggregate_complex_option_trades(option_transactions):
 def index():
     # Get the requested file from query parameters, default to first available file
     available_files = get_available_data_files()
+
+    # If no files exist, return empty dashboard
     if not available_files:
-        return render_template('index.html', error="No data files found in data directory")
+        empty_data = {
+            'available_files': [],
+            'selected_file': None,
+            'option_complex_trades': []
+        }
+        return render_template('index.html', data=empty_data)
 
     requested_file = request.args.get('data_file')
     if requested_file and requested_file in available_files:
