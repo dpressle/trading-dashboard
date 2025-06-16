@@ -50,7 +50,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 ### 3. Install Dependencies
 ```bash
-pip install flask pandas
+pip install -r requirements.txt
 ```
 
 ### 4. Create Data Directory

@@ -1274,7 +1274,7 @@
                     }, 0);
                     const totalFees = legs.reduce((sum, leg) => sum + Math.abs(leg.Fee), 0);
                     const netAmount = legs.reduce((sum, leg) => sum + leg.Amount, 0);
-                    const realizedPnL = netAmount - totalFees;
+                    const realizedPnL = totalPremium + totalFees;
 
                     // Calculate trade duration
                     const dates = legs.map(leg => new Date(leg.Date)).filter(date => !isNaN(date));
