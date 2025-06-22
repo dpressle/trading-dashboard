@@ -1,40 +1,40 @@
-# Trading Dashboard
+# IBKR Trading Dashboard
 
-A comprehensive web-based dashboard for analyzing trading data, with special focus on options trading and complex multi-leg strategies.
+A comprehensive web-based dashboard for Interactive Brokers (IBKR) trading data analysis, with real-time connection to IBKR Gateway API and advanced options trading analytics.
 
 ## 🚀 Features
 
-### 📊 **Portfolio Overview**
-- **Account Summary**: Total value, cash, and margin information
-- **Performance Metrics**: P&L tracking, win/loss ratios, and performance charts
-- **Position Analysis**: Current holdings with detailed metrics
+### 📊 **Real-Time Portfolio Overview**
+- **Live Account Data**: Real-time account details, balances, and performance metrics
+- **Connection Monitoring**: Automatic IBKR Gateway connection status and error handling
+- **Performance Tracking**: P&L tracking, win/loss ratios, and performance charts
+- **Position Analysis**: Current holdings with detailed metrics and analytics
 
-### 📈 **Trading Analysis**
-- **Stock Transactions**: Individual stock trade tracking and analysis
-- **Option Transactions**: Detailed options trading history
-- **Complex Option Trades**: Multi-leg strategy aggregation and analysis
-  - Automatic detection of spreads, straddles, condors, and other complex strategies
-  - Credit/Debit analysis with proper profit/loss calculations
-  - Trade duration and timeline tracking
-  - Individual leg breakdown with visual cards
+### 📈 **Advanced Trading Analytics**
+- **Position Analytics**: Comprehensive analysis of current positions including P&L, cost basis, and risk metrics
+- **Put Analysis**: Specialized analysis for put options with annualized return calculations
+- **Performance Metrics**: Multi-period performance analysis (1D, 7D, MTD, YTD)
+- **Account Ledger**: Detailed cash balance and net liquidation value tracking
 
-### 🎯 **Advanced Analytics**
-- **Holding Period Analysis**: Categorization and statistics by trade duration
-- **Realized P&L**: Profit/loss calculations after fees
-- **Trade Structure Analysis**: Buy vs Sell legs, Calls vs Puts breakdown
-- **Visual Metrics**: Color-coded cards for quick profit/loss identification
+### 🎯 **Options Trading Focus**
+- **Put Annualized Returns**: Automatic calculation of annualized returns for put positions
+- **Position Recommendations**: Identifies put positions with returns below 12% for potential closure
+- **Collateral Analysis**: Tracks total collateral tied up in put positions
+- **Risk Metrics**: Largest gains/losses, average position size, and position type breakdown
 
 ### 💻 **User Interface**
+- **Real-Time Updates**: Live data refresh with connection status monitoring
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Bootstrap 5**: Modern, clean interface with professional styling
-- **Interactive Modals**: Detailed trade analysis in popup windows
-- **Tabbed Navigation**: Organized sections for different data types
+- **Interactive Controls**: Manual reconnect, refresh, and tickle control buttons
+- **Error Handling**: Clear error messages and actionable troubleshooting steps
 
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
-- Python 3.7 or higher
-- pip (Python package installer)
+- Docker and Docker Compose
+- Interactive Brokers account
+- IBKR Gateway access
 
 ### 1. Clone the Repository
 ```bash
@@ -42,34 +42,17 @@ git clone <repository-url>
 cd trading_dashboard
 ```
 
-### 2. Create Virtual Environment
+### 2. Configure Environment Variables
+Create a `.env` file or set environment variables:
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+export IBKR_GATEWAY_URL=localhost
+export IBIND_ACCOUNT_ID=your_account_id
+export IBIND_PORT=5001
 ```
 
-### 3. Install Dependencies
+### 3. Start the Application
 ```bash
-pip install -r requirements.txt
-```
-
-### 4. Create Data Directory
-```bash
-mkdir -p data
-```
-
-### 5. Prepare Your Data
-Place your trading data file(s) (`.tlg` format) in the `data/` folder. The application will automatically detect and list all `.tlg` files in the data directory.
-
-#### 📥 **Obtaining .tlg Files**
-- **Interactive Brokers**: Export third-party reports from your IBKR account
-- **Third-party Tools**: Use IBKR-compatible reporting tools
-- **File Format**: Ensure files are in `.tlg` format with pipe-delimited structure
-- **Multiple Files**: You can have multiple `.tlg` files for different time periods or accounts
-
-### 6. Run the Application
-```bash
-python app.py
+docker-compose up -d
 ```
 
 The dashboard will be available at `http://localhost:5000`
@@ -78,151 +61,188 @@ The dashboard will be available at `http://localhost:5000`
 
 ```
 trading_dashboard/
-├── app.py                 # Main Flask application
+├── app.py                    # Main Flask application
+├── ibkr_client.py           # IBKR API client wrapper
 ├── templates/
-│   └── index.html        # Dashboard template
-├── static/               # CSS, JS, and image files
-├── data/                 # Trading data files
-│   └── *.tlg            # Your trading data files
-├── .venv/               # Virtual environment
-└── README.md            # This file
+│   └── index.html           # Dashboard template
+├── docker-compose.yml       # Docker services configuration
+├── Dockerfile               # Flask app container
+├── Dockerfile.ibkr_gateway  # IBKR Gateway container
+├── requirements.txt         # Python dependencies
+├── test_*.py               # Test scripts for various components
+└── README.md               # This file
 ```
 
-## 📊 Data Format
+## 🔌 IBKR Gateway Setup
 
-The application processes trading data in `.tlg` format, which is a third-party report format used with Interactive Brokers (IBKR) trading platform.
+### Authentication
+1. **Access IBKR Gateway**: Open `https://localhost:5001` in your browser
+2. **Login**: Enter your IBKR credentials (username/password)
+3. **Complete 2FA**: If enabled, complete two-factor authentication
+4. **Verify Connection**: The dashboard will automatically detect successful authentication
 
-### 📋 **About .tlg Files**
-- **Source**: Interactive Brokers third-party reports
-- **Format**: Pipe-delimited text files with structured sections
-- **Content**: Account information, transactions, and positions
-- **Generation**: Can be exported from IBKR platform or third-party tools
+### Connection Monitoring
+The dashboard includes robust connection handling:
+- **Automatic Monitoring**: Continuous connection status checking
+- **Background Tickle**: Keeps IBKR session alive
+- **Error Recovery**: Handles disconnections and session expirations
+- **Manual Controls**: Reconnect and refresh buttons for user control
 
-### 📁 **File Structure**
-Each `.tlg` file contains the following sections:
-- **ACCOUNT_INFORMATION**: Account details and personal information
-- **STOCK_TRANSACTIONS**: Individual stock trades and transactions
-- **OPTION_TRANSACTIONS**: Options trades with detailed contract information
-- **STOCK_POSITIONS**: Current stock holdings and positions
-- **OPTION_POSITIONS**: Current options positions and contract details
+## 📊 Data Sources
 
-### 📈 **Data Fields**
+### IBKR API Integration
+The dashboard connects directly to IBKR Gateway API endpoints:
+- **Account Details**: Account information and type
+- **Positions**: Current open positions with real-time market data
+- **Account Performance**: Multi-period performance metrics
+- **Account Ledger**: Cash balances and net liquidation values
+- **Trades**: Historical trade data (when available)
 
-#### Stock Transactions
-- Date, Symbol, Description, Action, Quantity, Price, Amount, Fee
-
-#### Option Transactions
-- Date, Symbol, Description, Action, Type, Strike, Expiration, Quantity, Price, Amount, Fee
-- **Description Format**: `SYMBOL DDMMMYY STRIKE TYPE` (e.g., "GOOG 04APR25 175 P")
-- **Type**: P (Put) or C (Call)
-- **Expiration**: Extracted from description (e.g., "04APR25" → "2025-04-04")
-
-### 🔍 **Complex Trade Detection**
-The system automatically groups option transactions into complex trades based on:
-- Same underlying symbol
-- Same expiration date
-- Related execution dates
-- Multi-leg structure analysis
+### Real-Time Updates
+- **Live Data**: All data is fetched in real-time from IBKR
+- **Automatic Refresh**: Background processes keep data current
+- **Connection Status**: Real-time monitoring of IBKR Gateway connectivity
 
 ## 🎯 Usage Guide
 
 ### Dashboard Navigation
-1. **Portfolio Overview**: View account summary and performance metrics
-2. **Recent Transactions**:
-   - **Stocks Tab**: Individual stock trades
-   - **Options Tab**: Individual option trades
-   - **Complex Trades Tab**: Multi-leg option strategies
-3. **Holding Period Analysis**: Trade duration statistics
+1. **Connection Status**: Monitor IBKR Gateway connection at the top
+2. **Account Overview**: View account details and balances
+3. **Performance**: Multi-period performance metrics
+4. **Positions**: Current holdings with detailed analytics
+5. **Put Analysis**: Specialized put options analysis and recommendations
 
-### Complex Trade Analysis
-1. Navigate to the "Complex Option Trades" tab
-2. Click "View Legs" on any trade to see detailed analysis
-3. The modal will show:
-   - **Summary Cards**: Net Credit/Debit, Total Fees, Realized P&L, Trade Duration
-   - **Trade Structure**: Buy/Sell legs, Calls/Puts breakdown
-   - **Trade Timeline**: Start/End dates and duration
-   - **Individual Legs**: Detailed cards for each option leg
+### Connection Management
+- **Status Banner**: Shows current connection status
+- **Reconnect Button**: Manual reconnection attempt
+- **Refresh Button**: Refresh all dashboard data
+- **IBKR Login Link**: Direct link to IBKR Gateway for re-authentication
 
-### Understanding Credit/Debit Logic
-- **SELL** options = **Credit** (negative amount = profit)
-- **BUY** options = **Debit** (positive amount = loss)
-- **Net Credit** = Green card (profitable position)
-- **Net Debit** = Red card (costly position)
+### Put Analysis Features
+- **Annualized Returns**: Automatic calculation for all put positions
+- **Closure Recommendations**: Identifies positions with <12% annualized returns
+- **Collateral Tracking**: Total collateral tied up in put positions
+- **Risk Assessment**: Position-specific risk metrics
 
 ## 🔧 Technical Details
 
-### Backend (Flask)
-- **Data Parsing**: Custom parser for `.tlg` trading data files
-- **Complex Trade Aggregation**: Algorithm to group related option transactions
-- **Performance Calculations**: P&L, fees, and duration analysis
+### Backend (Flask + IBKR API)
+- **IBKR Client**: Custom wrapper for IBKR Gateway API
+- **Connection Management**: Robust error handling and reconnection logic
+- **Data Processing**: Real-time position and performance analytics
+- **Background Workers**: Tickle worker for session maintenance
 
 ### Frontend (Bootstrap 5)
-- **Responsive Grid**: Mobile-first design approach
-- **Interactive Components**: Modals, tabs, and collapsible sections
-- **Visual Indicators**: Color-coded cards and badges for quick analysis
+- **Responsive Design**: Mobile-first approach
+- **Real-Time Updates**: Live data refresh and status monitoring
+- **Interactive Controls**: Manual connection management
+- **Error Handling**: User-friendly error messages and troubleshooting
 
-### Key Functions
-- `parse_trading_data()`: Processes raw trading data
-- `aggregate_complex_option_trades()`: Groups multi-leg strategies
-- `calculate_holding_period_stats()`: Analyzes trade duration patterns
-
-## 🎨 Customization
-
-### Styling
-- Modify `templates/index.html` for layout changes
-- Update Bootstrap classes for visual customization
-- Add custom CSS in the `<style>` section
-
-### Data Processing
-- Edit `app.py` to modify data parsing logic
-- Adjust complex trade detection algorithms
-- Add new analytics functions
-
-### Adding Features
-- New data visualizations can be added to the template
-- Additional analysis functions can be implemented in `app.py`
-- Custom JavaScript can be added for enhanced interactivity
-
-## 📈 Supported Trading Strategies
-
-The dashboard automatically detects and analyzes:
-- **Credit Spreads**: Sell high, buy low strikes
-- **Debit Spreads**: Buy high, sell low strikes
-- **Iron Condors**: Sell both call and put spreads
-- **Straddles**: Buy both call and put at same strike
-- **Strangles**: Buy both call and put at different strikes
-- **Butterflies**: Three-leg option strategies
-- **Calendar Spreads**: Different expiration dates
-- **Diagonal Spreads**: Different strikes and expirations
+### Docker Architecture
+- **Flask Container**: Web application with network_mode: host
+- **IBKR Gateway Container**: IBKR Gateway service with network_mode: host
+- **Shared Network**: Both containers access localhost for direct communication
 
 ## 🔍 Troubleshooting
 
 ### Common Issues
-1. **Data File Not Found**: Ensure your `.tlg` file is in the `data/` folder
-2. **Import Errors**: Activate the virtual environment before running
-3. **Port Already in Use**: Change the port in `app.py` or kill existing processes
-4. **Invalid .tlg Format**: Ensure file follows Interactive Brokers third-party report structure
-5. **Missing Sections**: .tlg files should contain ACCOUNT_INFORMATION, STOCK_TRANSACTIONS, OPTION_TRANSACTIONS sections
 
-### .tlg File Issues
-- **File Not Loading**: Check that the file is properly formatted with pipe-delimited fields
-- **Missing Data**: Ensure all required sections are present in the file
-- **Date Format**: Dates should be in YYYYMMDD format
-- **Option Descriptions**: Should follow format `SYMBOL DDMMMYY STRIKE TYPE`
+1. **"401 Unauthorized"**
+   - Re-authenticate in IBKR Gateway at `https://localhost:5001`
+   - Complete 2FA if enabled
+   - Click "Reconnect" button in dashboard
 
-### Debug Mode
-Run with debug output:
+2. **"Connection refused"**
+   - Ensure IBKR Gateway container is running: `docker ps`
+   - Check if port 5001 is accessible: `curl -k https://localhost:5001`
+   - Restart containers: `docker-compose restart`
+
+3. **"404 Not Found"**
+   - IBKR Gateway may not be fully initialized
+   - Wait a few minutes for startup
+   - Check IBKR Gateway logs: `docker logs trading_dashboard-ibkr_gateway-1`
+
+4. **"Network connectivity issues"**
+   - Verify Docker containers are running with host networking
+   - Check firewall settings
+   - Ensure no other services are using port 5001
+
+### Manual Reconnection Steps
+1. Check connection status banner for specific error messages
+2. Click "Reconnect" button to attempt manual reconnection
+3. Click "IBKR Login" link to open IBKR Gateway for re-authentication
+4. If still failing, restart containers: `docker-compose restart`
+5. Refresh the dashboard page
+
+### Debug Commands
 ```bash
-python debug_complex_trades.py
+# Check container status
+docker ps
+
+# View Flask app logs
+docker logs trading_dashboard-flask-1
+
+# View IBKR Gateway logs
+docker logs trading_dashboard-ibkr_gateway-1
+
+# Test IBKR Gateway connectivity
+curl -k https://localhost:5001
+
+# Check environment variables
+docker exec trading_dashboard-flask-1 env | grep IBKR
 ```
-The debug script will automatically use the first `.tlg` file found in the `data/` directory.
+
+## 🧪 Testing
+
+### Test Scripts
+The project includes comprehensive test scripts:
+- `test_ibkr_client.py` - Test IBKR API client functionality
+- `test_connection_handling.py` - Test connection management
+- `test_position_analytics.py` - Test position analysis calculations
+- `test_put_analysis.py` - Test put options analysis
+
+### Running Tests
+```bash
+# Test IBKR client
+python test_ibkr_client.py
+
+# Test connection handling
+python test_connection_handling.py
+
+# Test position analytics
+python test_position_analytics.py
+```
+
+## 🔒 Security & Privacy
+
+### Data Handling
+- **Local Processing**: All data processing happens locally
+- **No Data Storage**: No sensitive data is stored permanently
+- **Secure Communication**: HTTPS communication with IBKR Gateway
+- **Session Management**: Proper session handling and cleanup
+
+### Authentication
+- **IBKR Credentials**: Stored securely in IBKR Gateway
+- **Session Tokens**: Managed by IBKR Gateway
+- **No Local Storage**: Credentials are not stored in the application
+
+## 🚀 Future Enhancements
+
+- [ ] Real-time market data integration
+- [ ] Advanced charting capabilities
+- [ ] Risk analysis tools
+- [ ] Portfolio optimization suggestions
+- [ ] Export functionality for reports
+- [ ] Multiple account support
+- [ ] Historical trade analysis
+- [ ] Custom alerts and notifications
 
 ## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Test thoroughly with IBKR Gateway
 5. Submit a pull request
 
 ## 📝 License
@@ -259,7 +279,7 @@ This trading dashboard application is provided **"AS IS"** for **personal use an
 - Modification for personal use is permitted
 
 ### 📊 **Data Accuracy**
-- The application processes data as provided
+- The application processes data as provided by IBKR
 - No verification of data accuracy is performed
 - Users are responsible for validating their data
 - The author is not liable for data processing errors
@@ -270,13 +290,3 @@ This trading dashboard application is provided **"AS IS"** for **personal use an
 ---
 
 **Happy Trading! 📈💰**
-
-## 🚀 Future Enhancements
-
-- [ ] Real-time data integration
-- [ ] Advanced charting capabilities
-- [ ] Risk analysis tools
-- [ ] Portfolio optimization suggestions
-- [ ] Export functionality for reports
-- [ ] Multiple account support
-- [ ] API integration for live market data

@@ -1,0 +1,21 @@
+FROM openjdk:11-jre-slim
+
+ARG IBKR_GATEWAY_PORT=5000
+# Set environment variables for the latest version
+# ENV IBKR_GATEWAY_VERSION=10.25.1c
+# ENV IBKR_GATEWAY_URL=https://download2.interactivebrokers.com/portal-clientportal-gateway/${IBKR_GATEWAY_VERSION}/ClientPortalGateway-linux-x64-${IBKR_GATEWAY_VERSION}.zip
+ENV IBKR_GATEWAY_URL=https://download2.interactivebrokers.com/portal/clientportal.gw.zip
+WORKDIR /opt/ibkr
+
+# Install wget and unzip, download and extract the gateway
+RUN apt-get update && apt-get install -y wget unzip && \
+    wget -O gateway.zip $IBKR_GATEWAY_URL && \
+    unzip gateway.zip && \
+    sed -i "s/5000/${IBKR_GATEWAY_PORT}/g" root/conf.yaml && \
+    rm gateway.zip
+
+# Expose the default port
+EXPOSE "${IBKR_GATEWAY_PORT}"
+
+# Start the gateway
+CMD ["sh", "bin/run.sh", "root/conf.yaml"]

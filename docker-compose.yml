@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  web:
+  flask:
     build: .
     ports:
       - "5000:5000"
@@ -10,4 +10,20 @@ services:
     environment:
       - FLASK_ENV=development
       - FLASK_APP=app.py
+      - IBKR_GATEWAY_URL=localhost
+      - IBIND_PORT=5001
     restart: unless-stopped
+    depends_on:
+      - ibkr_gateway
+    network_mode: host
+
+  ibkr_gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.ibkr_gateway
+      args:
+        - IBKR_GATEWAY_PORT=5001
+    ports:
+      - "5001:5001"
+    restart: unless-stopped
+    network_mode: host

@@ -275,6 +275,196 @@
                 justify-content: center;
             }
         }
+
+        /* Performance Cards Styles */
+        .performance-card {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .performance-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        }
+
+        .performance-card .card-body {
+            padding: 1.25rem;
+        }
+
+        .performance-card h4 {
+            font-weight: 700;
+            color: #5a5c69;
+            margin: 0;
+        }
+
+        .performance-card .badge {
+            font-size: 0.75rem;
+            padding: 0.375rem 0.75rem;
+        }
+
+        .performance-details {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e3e6f0;
+        }
+
+        .performance-details small {
+            font-size: 0.8rem;
+        }
+
+        /* Analytics Cards Styles */
+        .analytics-card {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .analytics-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        }
+
+        .analytics-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .analytics-card h4 {
+            font-weight: 700;
+            color: #5a5c69;
+            margin: 0;
+            font-size: 1.75rem;
+        }
+
+        .analytics-icon {
+            font-size: 2rem;
+            opacity: 0.8;
+        }
+
+        .analytics-card small {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Connection Status and Notifications */
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .connection-banner {
+            margin: 0 1rem 1rem 1rem;
+            border-radius: 8px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-radius: 8px;
+        }
+
+        /* Loading indicator improvements */
+        #loadingIndicator {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            font-weight: 500;
+            padding: 15px;
+        }
+
+        /* Connection status button improvements */
+        .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .btn-outline-light:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Account Overview Styles */
+        .account-overview .card {
+            border: 1px solid #e3e6f0;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .account-overview .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.2);
+        }
+
+        .account-overview .card-header {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-bottom: none;
+            border-radius: 0.75rem 0.75rem 0 0 !important;
+        }
+
+        .account-overview .card-header h6 {
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .account-overview .card-body {
+            padding: 1.5rem;
+        }
+
+        .account-overview .fw-bold {
+            font-weight: 600 !important;
+        }
+
+        .account-overview hr {
+            margin: 1rem 0;
+            opacity: 0.2;
+        }
+
+        .account-overview .text-muted {
+            font-size: 0.9rem;
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: white !important;
+        }
+
+        .navbar-nav .nav-link.active {
+            color: white !important;
+        }
+
+        .navbar-nav .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: white;
+            border-radius: 1px;
+        }
+
+        /* Scroll offset for fixed navbar */
+        html {
+            scroll-padding-top: 80px;
+        }
     </style>
 </head>
 <body>
@@ -290,33 +480,110 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#"><i class="bi bi-house"></i> Dashboard</a>
+                        <a class="nav-link active" href="#overview"><i class="bi bi-house"></i> Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#performance"><i class="bi bi-graph-up-arrow"></i> Performance</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#analytics"><i class="bi bi-bar-chart"></i> Analytics</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#put-analysis"><i class="bi bi-graph-down"></i> Put Analysis</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#positions"><i class="bi bi-briefcase"></i> Positions</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#transactions"><i class="bi bi-clock-history"></i> Transactions</a>
-                    </li>
                 </ul>
-                <!-- File Selector -->
-                <div class="d-flex align-items-center ms-3">
-                    <div class="input-group">
-                        <label class="input-group-text" for="dataFileSelect">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </label>
-                        <select class="form-select" id="dataFileSelect" style="width: auto;">
-                            {% for file in data.available_files %}
-                            <option value="{{ file }}" {% if file == data.selected_file %}selected{% endif %}>
-                                {{ file }}
-                            </option>
-                            {% endfor %}
-                        </select>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Connection Status Banner -->
+    {% if data.connection_status is defined %}
+    <div id="connectionBanner" class="alert alert-{% if data.connection_status.connected %}success{% else %}danger{% endif %} alert-dismissible fade show" role="alert" style="margin: 0 1rem 1rem 1rem;">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-{% if data.connection_status.connected %}wifi{% else %}wifi-off{% endif %}"></i>
+                <strong>IBKR Connection:</strong>
+                {% if data.connection_status.connected %}
+                    Connected
+                {% else %}
+                    Disconnected
+                    {% if data.connection_status.error_message %}
+                        - {{ data.connection_status.error_message }}
+                    {% endif %}
+                {% endif %}
+                {% if data.connection_status.retry_count > 0 %}
+                    <small class="ms-2">(Retry count: {{ data.connection_status.retry_count }})</small>
+                {% endif %}
+            </div>
+            <div>
+                {% if not data.connection_status.connected %}
+                <button type="button" class="btn btn-sm btn-outline-light me-2" onclick="attemptReconnect()">
+                    <i class="bi bi-arrow-clockwise"></i> Reconnect
+                </button>
+                <a href="{{ data.connection_status.gateway_url }}" target="_blank" class="btn btn-sm btn-outline-light me-2">
+                    <i class="bi bi-box-arrow-up-right"></i> IBKR Login
+                </a>
+                {% endif %}
+                <button type="button" class="btn btn-sm btn-outline-light" onclick="refreshData()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endif %}
+
+    <!-- No Data Message -->
+    {% if data.connection_status is defined and not data.connection_status.connected %}
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card border-warning">
+                    <div class="card-body text-center">
+                        <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                        <h4 class="mt-3 text-warning">No Data Available</h4>
+                        <p class="text-muted">
+                            The dashboard is currently disconnected from IBKR. This usually happens when:
+                        </p>
+                        <ul class="text-muted text-start">
+                            <li>The IBKR session has expired</li>
+                            <li>The IBKR Gateway is not running</li>
+                            <li>There are network connectivity issues</li>
+                            <li>Authentication credentials need to be refreshed</li>
+                        </ul>
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>IBKR Gateway:</strong> This is the authentication interface for Interactive Brokers.
+                            Use it to log in and maintain your session. The dashboard connects to IBKR through this gateway.
+                        </div>
+                        <div class="mt-4">
+                            <button type="button" class="btn btn-warning me-2" onclick="attemptReconnect()">
+                                <i class="bi bi-arrow-clockwise"></i> Try Reconnecting
+                            </button>
+                            <a href="{{ data.connection_status.gateway_url }}" target="_blank" class="btn btn-info me-2">
+                                <i class="bi bi-box-arrow-up-right"></i> Open IBKR Gateway
+                            </a>
+                            <button type="button" class="btn btn-outline-secondary" onclick="refreshData()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh Data
+                            </button>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Last check: {{ data.connection_status.last_check or 'Never' }}
+                                {% if data.connection_status.retry_count > 0 %}
+                                <br>Retry attempts: {{ data.connection_status.retry_count }}
+                                {% endif %}
+                            </small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </nav>
+    </div>
+    {% endif %}
 
     <!-- Loading Indicator -->
     <div id="loadingIndicator" style="display: none; position: fixed; top: 0; left: 0; right: 0; background: rgba(0,0,0,0.5); color: white; text-align: center; padding: 10px; z-index: 1000;">
@@ -333,180 +600,544 @@
     </div>
     {% endif %}
 
+    <!-- Main Dashboard Content (only show when connected) -->
+    {% if data.connection_status is defined and data.connection_status.connected %}
     <div class="container-fluid py-4">
-        <!-- Account Information -->
-        {% if data.account_info is defined %}
-        <div class="section mb-4">
+        <!-- Account Overview (Combined Account Information and Ledger) -->
+        <div id="overview" class="section mb-4 account-overview">
             <div class="section-header d-flex justify-content-between align-items-center">
-                <h2 class="h4 mb-0"><i class="bi bi-person-circle"></i> Account Information</h2>
+                <h2 class="h4 mb-0"><i class="bi bi-person-circle"></i> Account Overview</h2>
+                {% if data.account_status is defined %}
+                <span class="badge {% if data.account_status.connection_status == 'Connected' %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ data.account_status.connection_status }}
+                </span>
+                {% endif %}
             </div>
+
             <div class="row">
-                {% for column in data.account_info.columns %}
-                <div class="col-md-3 mb-3">
+                <!-- Account Information -->
+                {% if data.account_info is defined %}
+                <div class="col-md-6 mb-4">
                     <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-person-circle"></i> Account Details</h6>
+                        </div>
                         <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">{{ column }}</h6>
-                            <p class="card-text">{{ data.account_info[column].iloc[0] }}</p>
+                            <div class="row">
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Account ID:</span>
+                                        <span class="fw-bold">{{ data.account_info.account_id or 'N/A' }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Name:</span>
+                                        <span class="fw-bold">{{ data.account_info.name or 'N/A' }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Type:</span>
+                                        <span class="fw-bold">{{ data.account_info.type or 'N/A' }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-muted">Currency:</span>
+                                        <span class="fw-bold">{{ data.account_info.currency or 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+                {% endif %}
+
+                <!-- Account Balances -->
+                {% if data.account_status is defined and data.account_status.balances %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-wallet2"></i> Account Balances</h6>
+                        </div>
+                        <div class="card-body">
+                            {% for currency, balance in data.account_status.balances.items() %}
+                            {% if balance.ledger_balance is defined or balance.settled_balance is defined or balance.pending_balance is defined %}
+                            <div class="mb-3">
+                                <h6 class="text-muted mb-2">
+                                    <i class="bi bi-currency-{{ currency.lower() }}"></i> {{ currency }} Balances
+                                </h6>
+
+                                {% if balance.ledger_balance is defined and balance.ledger_balance != 0 %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Ledger Balance:</span>
+                                    <span class="{% if balance.ledger_balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        ${{ "%.2f"|format(balance.ledger_balance) }}
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                {% if balance.settled_balance is defined and balance.settled_balance != 0 %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Settled Balance:</span>
+                                    <span class="{% if balance.settled_balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        ${{ "%.2f"|format(balance.settled_balance) }}
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                {% if balance.pending_balance is defined and balance.pending_balance != 0 %}
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Pending Balance:</span>
+                                    <span class="{% if balance.pending_balance >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                        ${{ "%.2f"|format(balance.pending_balance) }}
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                {% if not loop.last %}
+                                <hr class="my-3">
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Performance Cards -->
+        {% if data.performance is defined %}
+        <div id="performance" class="section mb-4">
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0"><i class="bi bi-graph-up-arrow"></i> Account Performance</h2>
+            </div>
+            <div class="row">
+                {% if data.performance %}
+                    {% for period, perf in data.performance.items() %}
+                        {% if perf %}
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="card performance-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="card-title text-muted mb-1">{{ period }}</h6>
+                                            <h4 class="mb-2">${{ "%.2f"|format(perf.current_nav) }}</h4>
+                                        </div>
+                                        <div class="text-end">
+                                            {% if perf.returns_pct >= 0 %}
+                                                <span class="badge bg-success">+{{ "%.2f"|format(perf.returns_pct) }}%</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">{{ "%.2f"|format(perf.returns_pct) }}%</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <div class="performance-details">
+                                        <small class="text-muted">
+                                            Change:
+                                            {% if perf.nav_change >= 0 %}
+                                                <span class="text-success">+${{ "%.2f"|format(perf.nav_change) }}</span>
+                                            {% else %}
+                                                <span class="text-danger">${{ "%.2f"|format(perf.nav_change) }}</span>
+                                            {% endif %}
+                                        </small>
+                                        <br>
+                                        <small class="text-muted">
+                                            Return:
+                                            {% if perf.returns_pct >= 0 %}
+                                                <span class="text-success">+{{ "%.2f"|format(perf.returns_pct) }}%</span>
+                                            {% else %}
+                                                <span class="text-danger">{{ "%.2f"|format(perf.returns_pct) }}%</span>
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Performance data not available
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         </div>
         {% endif %}
 
-        <!-- Expiration Alerts -->
-        <!-- {% if data.expiration_alerts is defined and data.expiration_alerts %}
-        <div class="section mb-4">
+        <!-- Position Analytics -->
+        {% if data.position_analytics is defined %}
+        <div id="analytics" class="section mb-4">
             <div class="section-header d-flex justify-content-between align-items-center">
-                <h2 class="h4 mb-0">
-                    <i class="bi bi-exclamation-triangle"></i> Expiration Alerts
-                    <span class="badge bg-danger ms-2">{{ data.expiration_alerts|length }}</span>
-                </h2>
+                <h2 class="h4 mb-0"><i class="bi bi-bar-chart"></i> Position Analytics</h2>
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Description</th>
-                            <th>Expiration</th>
-                            <th>Days Left</th>
-                            <th>Quantity</th>
-                            <th>Strike</th>
-                            <th>Type</th>
-                            <th>Premium</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for alert in data.expiration_alerts %}
-                        <tr class="table-{{ alert.alert_level }}">
-                            <td><strong>{{ alert.symbol }}</strong></td>
-                            <td>{{ alert.description }}</td>
-                            <td>{{ alert.expiration_date }}</td>
-                            <td>
-                                <span class="badge bg-{{ alert.alert_level }}">
-                                    {{ alert.days_to_expiration }} days
-                                </span>
-                            </td>
-                            <td>{{ alert.quantity }}</td>
-                            <td>${{ "%.2f"|format(alert.strike) }}</td>
-                            <td>{{ alert.type }}</td>
-                            <td>${{ "%.2f"|format(alert.premium) }}</td>
-                            <td>
-                                {% if alert.days_to_expiration <= 3 %}
-                                <span class="badge bg-danger">Expiring Soon!</span>
-                                {% elif alert.days_to_expiration <= 7 %}
-                                <span class="badge bg-warning">Expiring This Week</span>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-briefcase text-primary"></i>
+                            </div>
+                            <h4 class="mb-1">{{ data.position_analytics.total_positions }}</h4>
+                            <small class="text-muted">Total Positions</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-currency-dollar text-success"></i>
+                            </div>
+                            <h4 class="mb-1">${{ "%.2f"|format(data.position_analytics.total_value) }}</h4>
+                            <small class="text-muted">Total Value</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                {% if data.position_analytics.unrealized_pnl >= 0 %}
+                                    <i class="bi bi-graph-up-arrow text-success"></i>
                                 {% else %}
-                                <span class="badge bg-info">Upcoming</span>
+                                    <i class="bi bi-graph-down-arrow text-danger"></i>
                                 {% endif %}
-                            </td>
-                        </tr>
+                            </div>
+                            <h4 class="mb-1 {% if data.position_analytics.unrealized_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                ${{ "%.2f"|format(data.position_analytics.unrealized_pnl) }}
+                            </h4>
+                            <small class="text-muted">Unrealized P&L</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-percent text-info"></i>
+                            </div>
+                            <h4 class="mb-1 {% if data.position_analytics.unrealized_pnl_pct >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                {{ "%.2f"|format(data.position_analytics.unrealized_pnl_pct) }}%
+                            </h4>
+                            <small class="text-muted">P&L %</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position Breakdown -->
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Position Types</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span>Long Positions:</span>
+                                        <span class="badge bg-success">{{ data.position_analytics.long_positions }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span>Short Positions:</span>
+                                        <span class="badge bg-danger">{{ data.position_analytics.short_positions }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span>Options:</span>
+                                        <span class="badge bg-warning">{{ data.position_analytics.option_positions }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span>Stocks:</span>
+                                        <span class="badge bg-info">{{ data.position_analytics.stock_positions }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-trophy"></i> Top Performers</h6>
+                        </div>
+                        <div class="card-body">
+                            {% if data.position_analytics.most_profitable %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Most Profitable:</span>
+                                <div class="text-end">
+                                    <div class="text-success">{{ data.position_analytics.most_profitable.symbol }}</div>
+                                    <small class="text-success">+${{ "%.2f"|format(data.position_analytics.most_profitable.pnl) }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if data.position_analytics.least_profitable %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Least Profitable:</span>
+                                <div class="text-end">
+                                    <div class="text-danger">{{ data.position_analytics.least_profitable.symbol }}</div>
+                                    <small class="text-danger">${{ "%.2f"|format(data.position_analytics.least_profitable.pnl) }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if data.position_analytics.largest_position %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>Largest Position:</span>
+                                <div class="text-end">
+                                    <div>{{ data.position_analytics.largest_position.symbol }}</div>
+                                    <small>${{ "%.2f"|format(data.position_analytics.largest_position.value) }}</small>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Metrics -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-shield-check"></i> Risk Metrics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Largest Gain:</span>
+                                        <span class="text-success">${{ "%.2f"|format(data.position_analytics.risk_metrics.largest_gain) }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Largest Loss:</span>
+                                        <span class="text-danger">${{ "%.2f"|format(data.position_analytics.risk_metrics.largest_loss) }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Avg Position Size:</span>
+                                        <span>${{ "%.2f"|format(data.position_analytics.risk_metrics.avg_position_size) }}</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-2">
+                                    <div class="d-flex justify-content-between">
+                                        <span>Total Cost Basis:</span>
+                                        <span>${{ "%.2f"|format(data.position_analytics.total_cost) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Put Analysis -->
+        {% if data.put_analysis is defined and data.put_analysis.put_positions %}
+        <div id="put-analysis" class="section mb-4">
+            <div class="section-header d-flex justify-content-between align-items-center">
+                <h2 class="h4 mb-0"><i class="bi bi-graph-down"></i> Put Analysis</h2>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-info me-2">Total Collateral: ${{ "%.2f"|format(data.put_analysis.total_collateral_tied) }}</span>
+                    <span class="badge bg-secondary">Avg Return: {{ "%.2f"|format(data.put_analysis.avg_annualized_return) }}%</span>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-graph-down text-warning"></i>
+                            </div>
+                            <h4 class="mb-1">{{ data.put_analysis.put_positions|length }}</h4>
+                            <small class="text-muted">Put Positions</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-exclamation-triangle text-danger"></i>
+                            </div>
+                            <h4 class="mb-1">{{ data.put_analysis.positions_to_close|length }}</h4>
+                            <small class="text-muted">Should Close (< 12%)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-currency-dollar text-success"></i>
+                            </div>
+                            <h4 class="mb-1">${{ "%.2f"|format(data.put_analysis.total_collateral_tied) }}</h4>
+                            <small class="text-muted">Collateral Tied</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-percent text-info"></i>
+                            </div>
+                            <h4 class="mb-1">{{ "%.2f"|format(data.put_analysis.avg_annualized_return) }}%</h4>
+                            <small class="text-muted">Avg Annualized Return</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Put Positions Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-table"></i> Put Positions Analysis</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Strike</th>
+                                    <th>Expiration</th>
+                                    <th>Days Left</th>
+                                    <th>Quantity</th>
+                                    <th>Premium Received</th>
+                                    <th>Market Value</th>
+                                    <th>Current P&L</th>
+                                    <th>Collateral</th>
+                                    <th>Annualized Return</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for put in data.put_analysis.put_positions %}
+                                <tr class="{% if put.should_sell %}table-danger{% elif put.annualized_return >= 20 %}table-success{% endif %}">
+                                    <td><strong>{{ put.symbol }}</strong></td>
+                                    <td>${{ "%.2f"|format(put.strike) }}</td>
+                                    <td>{{ put.expiration }}</td>
+                                    <td>
+                                        <span class="badge {% if put.days_left <= 7 %}bg-danger{% elif put.days_left <= 14 %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ put.days_left }} days
+                                        </span>
+                                    </td>
+                                    <td>{{ put.quantity }}</td>
+                                    <td>${{ "%.2f"|format(put.premium) }}</td>
+                                    <td>${{ "%.2f"|format(put.mkt_value) }}</td>
+                                    <td class="{% if put.current_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.2f"|format(put.current_pnl) }}
+                                    </td>
+                                    <td>${{ "%.2f"|format(put.collateral) }}</td>
+                                    <td>
+                                        <span class="{% if put.annualized_return >= 12 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {{ "%.2f"|format(put.annualized_return) }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if put.should_close %}
+                                            <span class="badge bg-danger">CLOSE</span>
+                                        {% elif put.annualized_return >= 20 %}
+                                            <span class="badge bg-success">HOLD</span>
+                                        {% else %}
+                                            <span class="badge bg-warning">MONITOR</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Close Recommendations -->
+            {% if data.put_analysis.positions_to_close %}
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Close Recommendations (Return < 12%)</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for put in data.put_analysis.positions_to_close %}
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card border-danger">
+                                <div class="card-body">
+                                    <h6 class="card-title text-danger">{{ put.symbol }}</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Strike:</small><br>
+                                            <strong>${{ "%.2f"|format(put.strike) }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Return:</small><br>
+                                            <strong class="text-danger">{{ "%.2f"|format(put.annualized_return) }}%</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Days Left:</small><br>
+                                            <strong>{{ put.days_left }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Collateral:</small><br>
+                                            <strong>${{ "%.2f"|format(put.collateral) }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Premium:</small><br>
+                                            <strong>${{ "%.2f"|format(put.premium) }}</strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Market Value:</small><br>
+                                            <strong>${{ "%.2f"|format(put.mkt_value) }}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-2">
+                                        <div class="col-12">
+                                            <small class="text-muted">Current P&L:</small><br>
+                                            <strong class="{% if put.current_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                ${{ "%.2f"|format(put.current_pnl) }}
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %} -->
-
-        <!-- Date Range Selector -->
-        <div class="date-range-selector">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">
-                    <i class="bi bi-calendar-range"></i> Date Range Filter
-                </h5>
-                <small class="text-muted" id="dateRangeInfo">
-                    Showing all transactions
-                </small>
-            </div>
-
-            <div class="date-range-controls">
-                <div class="date-input-group">
-                    <label for="startDate">Start Date</label>
-                    <input type="date" id="startDate" class="form-control">
-                </div>
-
-                <div class="date-input-group">
-                    <label for="endDate">End Date</label>
-                    <input type="date" id="endDate" class="form-control">
-                </div>
-
-                <div class="date-input-group">
-                    <button type="button" class="btn btn-primary" id="applyDateRange">
-                        <i class="bi bi-funnel"></i> Apply Filter
-                    </button>
-                </div>
-
-                <div class="preset-buttons">
-                    <button type="button" class="preset-btn" data-days="7">Last 7 Days</button>
-                    <button type="button" class="preset-btn" data-days="30">Last 30 Days</button>
-                    <button type="button" class="preset-btn" data-days="90">Last 3 Months</button>
-                    <button type="button" class="preset-btn" data-days="365">Last Year</button>
-                    <button type="button" class="preset-btn" id="clearDateFilter">
-                        <i class="bi bi-x-circle"></i> Clear Filter
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Summary Statistics -->
-        <div class="summary-stats">
-            {% if data.stock_positions is defined %}
-            <div class="summary-card">
-                <h3>Stock Positions</h3>
-                <div class="value">
-                    ${{ "%.2f"|format(data.stock_positions['Amount'].sum()) }}
-                </div>
-                <small class="text-muted">{{ data.stock_positions|length }} positions</small>
-            </div>
-            {% endif %}
-
-            {% if data.option_positions is defined %}
-            <div class="summary-card">
-                <h3>Option Positions</h3>
-                <div class="value {{ 'positive' if data.option_positions_summary.total_value > 0 else 'negative' }}">
-                    ${{ "%.2f"|format(data.option_positions_summary.total_value) }}
-                </div>
-                <small class="text-muted">
-                    {{ data.option_positions_summary.total_positions }} positions
-                    ({{ data.option_positions_summary.long_positions }} long, {{ data.option_positions_summary.short_positions }} short)
-                </small>
-                {% if data.option_positions_summary.total_fees > 0 %}
-                <div class="mt-2">
-                    <small class="text-muted">Total Fees: ${{ "%.2f"|format(data.option_positions_summary.total_fees) }}</small>
-                </div>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            {% if data.stock_transactions is defined %}
-            <div class="summary-card">
-                <h3>Stock Transactions</h3>
-                <div class="value">
-                    ${{ "%.2f"|format(data.stock_transactions['Amount'].sum()) }}
-                </div>
-                <small class="text-muted">{{ data.stock_transactions|length }} transactions</small>
-            </div>
-            {% endif %}
-
-            {% if data.option_transactions is defined %}
-            <div class="summary-card">
-                <h3>Option Transactions</h3>
-                <div class="value {{ 'positive' if data.option_summary.net_pnl > 0 else 'negative' }}">
-                    ${{ "%.2f"|format(data.option_summary.net_pnl) }}
-                </div>
-                <small class="text-muted">
-                    {{ data.option_summary.total_transactions }} transactions
-                    ({{ data.option_summary.closed_positions }} closed, {{ data.option_summary.open_positions }} open)
-                </small>
-                <div class="mt-2">
-                    <small class="text-muted">Total Fees: ${{ "%.2f"|format(data.option_summary.total_fees) }}</small>
+                    </div>
                 </div>
             </div>
             {% endif %}
         </div>
+        {% endif %}
 
         <!-- Positions Section -->
         <div id="positions" class="section">
@@ -515,14 +1146,12 @@
             </div>
 
             <ul class="nav nav-tabs mb-4" id="positionsTab" role="tablist">
-                {% if data.stock_positions is defined %}
+                {% if data.positions is defined %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button">
                         <i class="bi bi-bar-chart"></i> Stocks
                     </button>
                 </li>
-                {% endif %}
-                {% if data.option_positions is defined %}
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="options-tab" data-bs-toggle="tab" data-bs-target="#options" type="button">
                         <i class="bi bi-option"></i> Options
@@ -532,7 +1161,6 @@
             </ul>
 
             <div class="tab-content" id="positionsTabContent">
-                {% if data.stock_positions is defined %}
                 <div class="tab-pane fade show active" id="stocks">
                     <div class="table-responsive">
                         <table class="table table-hover" id="stockPositionsTable">
@@ -541,29 +1169,37 @@
                                     <th>Symbol</th>
                                     <th>Description</th>
                                     <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>Amount</th>
+                                    <th>Market Price</th>
+                                    <th>Market Value</th>
+                                    <th>Avg Cost</th>
+                                    <th>Unrealized P&L</th>
+                                    <th>Realized P&L</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for _, row in data.stock_positions.iterrows() %}
+                                {% for _, row in data.positions.iterrows() %}
+                                {% if row['assetClass'] == 'STK' %}
                                 <tr>
-                                    <td><strong>{{ row['Symbol'] }}</strong></td>
-                                    <td>{{ row['Description'] }}</td>
-                                    <td>{{ row['Quantity'] }}</td>
-                                    <td>${{ "%.2f"|format(row['Price']) }}</td>
-                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['Amount']) }}
+                                    <td><strong>{{ row['ticker'] }}</strong></td>
+                                    <td>{{ row['fullName'] }}</td>
+                                    <td>{{ row['position'] }}</td>
+                                    <td>${{ "%.2f"|format(row['mktPrice']) }}</td>
+                                    <td>${{ "%.2f"|format(row['mktValue']) }}</td>
+                                    <td>${{ "%.2f"|format(row['avgCost']) }}</td>
+                                    <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['unrealizedPnl']) }}
+                                    </td>
+                                    <td class="{{ 'positive' if row['realizedPnl'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['realizedPnl']) }}
                                     </td>
                                 </tr>
+                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                {% endif %}
 
-                {% if data.option_positions is defined %}
                 <div class="tab-pane fade" id="options">
                     <div class="table-responsive">
                         <table class="table table-hover" id="optionPositionsTable">
@@ -571,487 +1207,50 @@
                                 <tr>
                                     <th>Symbol</th>
                                     <th>Description</th>
+                                    <th>Type</th>
                                     <th>Expiration</th>
                                     <th>Strike</th>
-                                    <th>Type</th>
                                     <th>Quantity</th>
-                                    <th>Premium</th>
-                                    <th>Amount</th>
+                                    <th>Market Price</th>
+                                    <th>Market Value</th>
+                                    <th>Avg Price</th>
+                                    <th>Avg Cost</th>
+                                    <th>Unrealized P&L</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for _, row in data.option_positions.iterrows() %}
+                                {% for _, row in data.positions.iterrows() %}
+                                {% if row['assetClass'] == 'OPT' %}
                                 <tr>
-                                    <td><strong>{{ row['Symbol'] }}</strong></td>
-                                    <td>{{ row['Description'] }}</td>
-                                    <td>{{ row['Expiration'] }}</td>
-                                    <td>${{ "%.2f"|format(row['Strike']) }}</td>
-                                    <td>{{ row['Type'] }}</td>
-                                    <td>{{ row['Quantity'] }}</td>
-                                    <td>${{ "%.2f"|format(row['Premium']) }}</td>
-                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['Amount']) }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Transactions Section -->
-        <div id="transactions" class="section">
-            <div class="section-header">
-                <h2 class="h4 mb-0"><i class="bi bi-clock-history"></i> Recent Transactions</h2>
-            </div>
-
-            <ul class="nav nav-tabs mb-4" id="transactionsTab" role="tablist">
-                {% if data.stock_transactions is defined %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="stock-trans-tab" data-bs-toggle="tab" data-bs-target="#stock-trans" type="button">
-                        <i class="bi bi-bar-chart"></i> Stocks
-                    </button>
-                </li>
-                {% endif %}
-                {% if data.option_transactions is defined %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="option-trans-tab" data-bs-toggle="tab" data-bs-target="#option-trans" type="button">
-                        <i class="bi bi-option"></i> Options
-                    </button>
-                </li>
-                {% endif %}
-                {% if data.option_complex_trades is defined and data.option_complex_trades|length > 0 %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="complex-trans-tab" data-bs-toggle="tab" data-bs-target="#complex-trans" type="button">
-                        <i class="bi bi-layers"></i> Complex Option Trades
-                    </button>
-                </li>
-                {% endif %}
-            </ul>
-
-            <div class="tab-content" id="transactionsTabContent">
-                {% if data.stock_transactions is defined %}
-                <div class="tab-pane fade show active" id="stock-trans">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="stockTransactionsTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Symbol</th>
-                                    <th>Action</th>
-                                    <th>Quantity</th>
-                                    <th>Price</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for _, row in data.stock_transactions.iterrows() %}
-                                <tr>
-                                    <td>{{ row['Date'] }}</td>
-                                    <td><strong>{{ row['Symbol'] }}</strong></td>
+                                    <td><strong>{{ row['ticker'] }}</strong></td>
+                                    <td>{{ row['fullName'] }}</td>
                                     <td>
-                                        <span class="badge {{ 'badge-buy' if row['Action'] == 'BUYTOOPEN' else 'badge-sell' }}">
-                                            {{ row['Action'] }}
+                                        <span class="badge {% if row['putOrCall'] == 'P' %}bg-danger{% else %}bg-success{% endif %}">
+                                            {{ row['putOrCall'] }}
                                         </span>
                                     </td>
-                                    <td>{{ row['Quantity'] }}</td>
-                                    <td>${{ "%.2f"|format(row['Price']) }}</td>
-                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['Amount']) }}
+                                    <td>{{ row['expiry'] }}</td>
+                                    <td>${{ "%.2f"|format(row['strike']) }}</td>
+                                    <td>{{ row['position'] }}</td>
+                                    <td>${{ "%.2f"|format(row['mktPrice']) }}</td>
+                                    <td>${{ "%.2f"|format(row['mktValue']) }}</td>
+                                    <td>${{ "%.2f"|format(row['avgPrice']) }}</td>
+                                    <td>${{ "%.2f"|format(row['avgCost']) }}</td>
+                                    <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['unrealizedPnl']) }}
                                     </td>
                                 </tr>
+                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
-                {% endif %}
-
-                {% if data.option_transactions is defined %}
-                <div class="tab-pane fade" id="option-trans">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="optionTransactionsTable">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Symbol</th>
-                                    <th>Description</th>
-                                    <th>Expiration</th>
-                                    <th>Strike</th>
-                                    <th>Type</th>
-                                    <th>Action</th>
-                                    <th>Quantity</th>
-                                    <th>Premium</th>
-                                    <th>Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for _, row in data.option_transactions.iterrows() %}
-                                <tr>
-                                    <td>{{ row['Date'] }}</td>
-                                    <td><strong>{{ row['Symbol'] }}</strong></td>
-                                    <td>{{ row['Description'] }}</td>
-                                    <td>{{ row['Expiration'] }}</td>
-                                    <td>${{ "%.2f"|format(row['Strike']) }}</td>
-                                    <td>{{ row['Description'].split()[-1] }}</td>
-                                    <td>
-                                        <span class="badge {{ 'badge-buy' if 'BUY' in row['Action'] else 'badge-sell' }}">
-                                            {{ row['Action'] }}
-                                        </span>
-                                    </td>
-                                    <td>{{ row['Quantity'] }}</td>
-                                    <td>${{ "%.2f"|format(row['Price']) }}</td>
-                                    <td class="{{ 'positive' if row['Amount'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['Amount']) }}
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% endif %}
-
-                {% if data.option_complex_trades is defined and data.option_complex_trades|length > 0 %}
-                <div class="tab-pane fade" id="complex-trans">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="complexOptionTradesTable">
-                            <thead>
-                                <tr>
-                                    <th>Open Date</th>
-                                    <th>Close Date</th>
-                                    <th>Symbol</th>
-                                    <th>Expiration</th>
-                                    <th>Type</th>
-                                    <th>Legs</th>
-                                    <th>Net Amount</th>
-                                    <th>Net Fees</th>
-                                    <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for trade in data.option_complex_trades %}
-                                <tr>
-                                    <td>{{ trade.Open_Date.strftime('%Y-%m-%d') if trade.Open_Date else '' }}</td>
-                                    <td>{{ trade.Close_Date.strftime('%Y-%m-%d') if trade.Close_Date else '' }}</td>
-                                    <td><strong>{{ trade.Symbol }}</strong></td>
-                                    <td>{{ trade.Expiration }}</td>
-                                    <td>{{ trade.Trade_Type }}</td>
-                                    <td>{{ trade.Num_Legs }}</td>
-                                    <td class="{{ 'positive' if trade.Net_Amount > 0 else 'negative' }}">${{ '%.2f'|format(trade.Net_Amount) }}</td>
-                                    <td>${{ '%.2f'|format(trade.Net_Fees) }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary view-legs-btn"
-                                                type="button"
-                                                data-legs='{{ trade.Legs | tojson }}'
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#legsModal">
-                                            View Legs
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
 
-        <!-- Trading Analytics Section -->
-        {% if data.trading_analytics is defined and data.trading_analytics.total_trades is defined and data.trading_analytics.total_trades > 0 %}
-        <div id="analytics" class="section">
-            <div class="section-header">
-                <h2 class="h4 mb-0"><i class="bi bi-graph-up-arrow"></i> Trading Analytics</h2>
-            </div>
-
-            <!-- Overall Statistics -->
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Total Trades</h6>
-                            <h3 class="card-title">{{ data.trading_analytics.total_trades }}</h3>
-                            <div class="d-flex justify-content-between">
-                                <small class="text-success">Wins: {{ data.trading_analytics.winning_trades }}</small>
-                                <small class="text-danger">Losses: {{ data.trading_analytics.losing_trades }}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Win Rate</h6>
-                            <h3 class="card-title">{{ "%.1f"|format(data.trading_analytics.win_rate) }}%</h3>
-                            <small class="text-muted">Successful trades</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Total P&L</h6>
-                            <h3 class="card-title {{ 'text-success' if data.trading_analytics.total_pnl > 0 else 'text-danger' }}">
-                                ${{ "%.2f"|format(data.trading_analytics.total_pnl) }}
-                            </h3>
-                            <small class="text-muted">Average: ${{ "%.2f"|format(data.trading_analytics.avg_pnl) }}</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h6 class="card-subtitle mb-2 text-muted">Avg Holding Period</h6>
-                            <h3 class="card-title">{{ "%.1f"|format(data.trading_analytics.avg_holding_period) }} days</h3>
-                            <small class="text-muted">Per trade</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Risk Metrics -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0"><i class="bi bi-shield-check"></i> Risk Metrics</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted">Max Drawdown</h6>
-                                            <h3 class="card-title text-danger">
-                                                ${{ "%.2f"|format(data.trading_analytics.max_drawdown|default(0)) }}
-                                            </h3>
-                                            <small class="text-muted">Largest peak-to-trough decline</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted">Sharpe Ratio</h6>
-                                            <h3 class="card-title {{ 'text-success' if data.trading_analytics.sharpe_ratio|default(0) > 1 else 'text-warning' }}">
-                                                {{ "%.2f"|format(data.trading_analytics.sharpe_ratio|default(0)) }}
-                                            </h3>
-                                            <small class="text-muted">Risk-adjusted returns (annualized)</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted">Avg Drawdown</h6>
-                                            <h3 class="card-title text-danger">
-                                                ${{ "%.2f"|format(data.trading_analytics.avg_drawdown|default(0)) }}
-                                            </h3>
-                                            <small class="text-muted">Average peak-to-trough decline</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="card h-100">
-                                        <div class="card-body">
-                                            <h6 class="card-subtitle mb-2 text-muted">Return Volatility</h6>
-                                            <h3 class="card-title">
-                                                {{ "%.1f"|format(data.trading_analytics.return_volatility|default(0)) }}%
-                                            </h3>
-                                            <small class="text-muted">Standard deviation of returns</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Performance by Option Type -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Performance by Option Type</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Type</th>
-                                            <th>Count</th>
-                                            <th>Win Rate</th>
-                                            <th>Total P&L</th>
-                                            <th>Avg P&L</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for type, stats in data.trading_analytics.type_stats.items() %}
-                                        <tr>
-                                            <td><strong>{{ type }}</strong></td>
-                                            <td>{{ stats.Count }}</td>
-                                            <td>{{ "%.1f"|format(stats.Win_Rate) }}%</td>
-                                            <td class="{{ 'text-success' if stats.Total_PnL > 0 else 'text-danger' }}">
-                                                ${{ "%.2f"|format(stats.Total_PnL) }}
-                                            </td>
-                                            <td class="{{ 'text-success' if stats.Avg_PnL > 0 else 'text-danger' }}">
-                                                ${{ "%.2f"|format(stats.Avg_PnL) }}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Holding Period Analysis -->
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Performance by Holding Period</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Period</th>
-                                            <th>Count</th>
-                                            <th>Win Rate</th>
-                                            <th>Total P&L</th>
-                                            <th>Avg P&L</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for period, stats in data.trading_analytics.holding_period_stats.items() %}
-                                        <tr>
-                                            <td><strong>{{ period }}</strong></td>
-                                            <td>{{ stats.Count }}</td>
-                                            <td>{{ "%.1f"|format(stats.Win_Rate) }}%</td>
-                                            <td class="{{ 'text-success' if stats.Total_PnL > 0 else 'text-danger' }}">
-                                                ${{ "%.2f"|format(stats.Total_PnL) }}
-                                            </td>
-                                            <td class="{{ 'text-success' if stats.Avg_PnL > 0 else 'text-danger' }}">
-                                                ${{ "%.2f"|format(stats.Avg_PnL) }}
-                                            </td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Best and Worst Trades -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Best Trades</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Symbol</th>
-                                            <th>Description</th>
-                                            <th>P&L</th>
-                                            <th>Days Held</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for trade in data.trading_analytics.best_trades %}
-                                        <tr>
-                                            <td><strong>{{ trade.Symbol }}</strong></td>
-                                            <td>{{ trade.Description }}</td>
-                                            <td class="text-success">${{ "%.2f"|format(trade.PnL) }}</td>
-                                            <td>{{ trade.Days_Held }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-header">
-                            <h5 class="card-title mb-0">Worst Trades</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table">
-                                    <thead>
-                                        <tr>
-                                            <th>Symbol</th>
-                                            <th>Description</th>
-                                            <th>P&L</th>
-                                            <th>Days Held</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for trade in data.trading_analytics.worst_trades %}
-                                        <tr>
-                                            <td><strong>{{ trade.Symbol }}</strong></td>
-                                            <td>{{ trade.Description }}</td>
-                                            <td class="text-danger">${{ "%.2f"|format(trade.PnL) }}</td>
-                                            <td>{{ trade.Days_Held }}</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% elif data.trading_analytics is defined and data.trading_analytics.total_trades is defined and data.trading_analytics.total_trades == 0 %}
-        <!-- No Data Message -->
-        <div id="analytics" class="section">
-            <div class="section-header">
-                <h2 class="h4 mb-0"><i class="bi bi-graph-up-arrow"></i> Trading Analytics</h2>
-            </div>
-            <div class="alert alert-info text-center">
-                <i class="bi bi-info-circle"></i>
-                <h5>No trading data found for the selected date range</h5>
-                <p class="mb-0">Try adjusting your date range or clear the filter to see all transactions.</p>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Add Analytics to Navigation -->
-        <script>
-            // Add Analytics link to navigation
-            document.addEventListener('DOMContentLoaded', function() {
-                const navList = document.querySelector('#navbarNav .navbar-nav');
-                if (navList && document.querySelector('#analytics')) {
-                    const analyticsLink = document.createElement('li');
-                    analyticsLink.className = 'nav-item';
-                    analyticsLink.innerHTML = `
-                        <a class="nav-link" href="#analytics">
-                            <i class="bi bi-graph-up-arrow"></i> Analytics
-                        </a>
-                    `;
-                    navList.appendChild(analyticsLink);
-                }
-            });
-        </script>
     </div>
+    {% endif %}
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -1085,11 +1284,57 @@
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
                     e.preventDefault();
+
+                    // Remove active class from all nav links
+                    document.querySelectorAll('.navbar-nav .nav-link').forEach(link => {
+                        link.classList.remove('active');
+                    });
+
+                    // Add active class to clicked link
+                    this.classList.add('active');
+
                     document.querySelector(this.getAttribute('href')).scrollIntoView({
                         behavior: 'smooth'
                     });
                 });
             });
+
+            // Navigation highlighting based on scroll position
+            function updateActiveNavLink() {
+                const sections = ['overview', 'performance', 'analytics', 'put-analysis', 'positions'];
+                const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+
+                let currentSection = '';
+
+                sections.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section) {
+                        const rect = section.getBoundingClientRect();
+                        if (rect.top <= 100 && rect.bottom >= 100) {
+                            currentSection = sectionId;
+                        }
+                    }
+                });
+
+                // If no section is currently visible, default to overview
+                if (!currentSection) {
+                    currentSection = 'overview';
+                }
+
+                // Update active nav link
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === '#' + currentSection) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            // Update active nav link on scroll
+            window.addEventListener('scroll', updateActiveNavLink);
+
+            // Initial call to set active nav link
+            updateActiveNavLink();
 
             // Back to Top Button functionality
             const backToTopButton = document.getElementById('backToTop');
@@ -1238,242 +1483,144 @@
                     urlEndDate ? formatDate(urlEndDate) : 'Now'
                 );
             }
+
+            // Start connection monitoring
+            startConnectionMonitoring();
         });
+
+        // Global functions for connection management
+        function attemptReconnect() {
+            const reconnectBtn = document.querySelector('button[onclick="attemptReconnect()"]');
+            const originalText = reconnectBtn.innerHTML;
+
+            // Show loading state
+            reconnectBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Connecting...';
+            reconnectBtn.disabled = true;
+
+            fetch('/api/reconnect')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Connection restored!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Reconnection failed: ' + (data.error_message || data.error), 'error');
+                        reconnectBtn.innerHTML = originalText;
+                        reconnectBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    showNotification('Reconnection failed: ' + error.message, 'error');
+                    reconnectBtn.innerHTML = originalText;
+                    reconnectBtn.disabled = false;
+                });
+        }
+
+        function refreshData() {
+            const refreshBtn = document.querySelector('button[onclick="refreshData()"]');
+            const originalText = refreshBtn.innerHTML;
+
+            // Show loading state
+            refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Refreshing...';
+            refreshBtn.disabled = true;
+
+            fetch('/api/refresh-data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Data refreshed successfully!', 'success');
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        showNotification('Refresh failed: ' + (data.error || 'Unknown error'), 'error');
+                        refreshBtn.innerHTML = originalText;
+                        refreshBtn.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    showNotification('Refresh failed: ' + error.message, 'error');
+                    refreshBtn.innerHTML = originalText;
+                    refreshBtn.disabled = false;
+                });
+        }
+
+        function startConnectionMonitoring() {
+            // Check connection status every 30 seconds
+            setInterval(() => {
+                fetch('/api/connection-status')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateConnectionBanner(data);
+                    })
+                    .catch(error => {
+                        console.error('Error checking connection status:', error);
+                    });
+            }, 30000);
+        }
+
+        function updateConnectionBanner(status) {
+            const banner = document.getElementById('connectionBanner');
+            if (!banner) return;
+
+            const isConnected = status.connected;
+            const alertClass = isConnected ? 'alert-success' : 'alert-danger';
+            const iconClass = isConnected ? 'bi-wifi' : 'bi-wifi-off';
+
+            // Update banner appearance
+            banner.className = `alert ${alertClass} alert-dismissible fade show`;
+
+            // Update content
+            const content = banner.querySelector('.d-flex');
+            if (content) {
+                const statusText = isConnected ? 'Connected' : 'Disconnected';
+                const errorText = status.error_message ? ` - ${status.error_message}` : '';
+                const retryText = status.retry_count > 0 ? ` (Retry count: ${status.retry_count})` : '';
+                const gatewayUrl = status.gateway_url || 'http://localhost:5001';
+
+                content.innerHTML = `
+                    <div>
+                        <i class="bi ${iconClass}"></i>
+                        <strong>IBKR Connection:</strong>
+                        ${statusText}${errorText}
+                        ${retryText ? `<small class="ms-2">${retryText}</small>` : ''}
+                    </div>
+                    <div>
+                        ${!isConnected ? `<button type="button" class="btn btn-sm btn-outline-light me-2" onclick="attemptReconnect()"><i class="bi bi-arrow-clockwise"></i> Reconnect</button>
+                        <a href="${gatewayUrl}" target="_blank" class="btn btn-sm btn-outline-light me-2"><i class="bi bi-box-arrow-up-right"></i> IBKR Login</a>` : ''}
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="refreshData()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+                    </div>
+                `;
+            }
+        }
+
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+            notification.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
     </script>
 
     <!-- Back to Top Button -->
     <button type="button" class="back-to-top" id="backToTop" title="Back to Top">
         <i class="bi bi-arrow-up"></i>
     </button>
-
-    <!-- Complex Trade Legs Modal -->
-    <div class="modal fade" id="legsModal" tabindex="-1" aria-labelledby="legsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="legsModalLabel">Complex Trade Legs</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="legsModalBody">
-                    <!-- Legs content will be injected here -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.view-legs-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    const legs = JSON.parse(this.getAttribute('data-legs'));
-
-                    // Calculate trade metrics
-                    const totalPremium = legs.reduce((sum, leg) => {
-                        // In your data: SELL = negative amount = credit (profit), BUY = positive amount = debit (loss)
-                        return sum + leg.Amount;
-                    }, 0);
-                    const totalFees = legs.reduce((sum, leg) => sum + Math.abs(leg.Fee), 0);
-                    const netAmount = legs.reduce((sum, leg) => sum + leg.Amount, 0);
-                    const realizedPnL = totalPremium + totalFees;
-
-                    // Calculate trade duration
-                    const dates = legs.map(leg => new Date(leg.Date)).filter(date => !isNaN(date));
-                    const startDate = new Date(Math.min(...dates));
-                    const endDate = new Date(Math.max(...dates));
-                    const tradeDuration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
-
-                    // Analyze trade structure
-                    const buyLegs = legs.filter(leg => leg.Action.includes('BUY'));
-                    const sellLegs = legs.filter(leg => leg.Action.includes('SELL'));
-                    const calls = legs.filter(leg => leg.Type === 'C');
-                    const puts = legs.filter(leg => leg.Type === 'P');
-
-                    let content = `
-                        <div class="row mb-4">
-                            <!-- Trade Summary Cards -->
-                            <div class="col-md-3 mb-3">
-                                <div class="card ${totalPremium < 0 ? 'bg-success' : 'bg-danger'} text-white">
-                                    <div class="card-body text-center">
-                                        <h4 class="card-title">$${Math.abs(totalPremium).toFixed(2)}</h4>
-                                        <small>${totalPremium < 0 ? 'Net Credit' : 'Net Debit'}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="card bg-info text-white">
-                                    <div class="card-body text-center">
-                                        <h4 class="card-title">$${totalFees.toFixed(2)}</h4>
-                                        <small>Total Fees</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="card ${realizedPnL < 0 ? 'bg-success' : 'bg-danger'} text-white">
-                                    <div class="card-body text-center">
-                                        <h4 class="card-title">$${Math.abs(realizedPnL).toFixed(2)}</h4>
-                                        <small>${realizedPnL < 0 ? 'Profit' : 'Loss'}</small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <div class="card bg-warning text-white">
-                                    <div class="card-body text-center">
-                                        <h4 class="card-title">${tradeDuration} days</h4>
-                                        <small>Trade Duration</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <!-- Trade Structure Analysis -->
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Trade Structure</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Buy Legs:</span>
-                                                    <strong>${buyLegs.length}</strong>
-                                                </div>
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Sell Legs:</span>
-                                                    <strong>${sellLegs.length}</strong>
-                                                </div>
-                                            </div>
-                                            <div class="col-6">
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Calls:</span>
-                                                    <strong>${calls.length}</strong>
-                                                </div>
-                                                <div class="d-flex justify-content-between">
-                                                    <span>Puts:</span>
-                                                    <strong>${puts.length}</strong>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0"><i class="bi bi-calendar-event"></i> Trade Timeline</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between">
-                                            <span>Start Date:</span>
-                                            <strong>${startDate.toLocaleDateString()}</strong>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>End Date:</span>
-                                            <strong>${endDate.toLocaleDateString()}</strong>
-                                        </div>
-                                        <div class="d-flex justify-content-between">
-                                            <span>Duration:</span>
-                                            <strong>${tradeDuration} days</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <!-- Individual Legs -->
-                            <div class="col-12">
-                                <div class="card">
-                                    <div class="card-header">
-                                        <h6 class="mb-0"><i class="bi bi-list-ul"></i> Trade Legs (${legs.length} total)</h6>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row">
-                    `;
-
-                    for (let i = 0; i < legs.length; i++) {
-                        const leg = legs[i];
-                        const dateStr = leg.Date ? new Date(leg.Date).toISOString().slice(0,10) : '';
-                        const actionClass = leg.Action.includes('BUY') ? 'border-success' : 'border-danger';
-                        const actionIcon = leg.Action.includes('BUY') ? 'arrow-up-circle' : 'arrow-down-circle';
-
-                        // In your data: SELL = negative amount = credit (profit), BUY = positive amount = debit (loss)
-                        const isCredit = parseFloat(leg.Amount) < 0; // Negative amount = credit
-                        const creditDebitClass = isCredit ? 'text-success' : 'text-danger';
-                        const creditDebitLabel = isCredit ? 'Credit' : 'Debit';
-                        const netAmount = parseFloat(leg.Amount) - parseFloat(leg.Fee);
-                        const netAmountClass = netAmount < 0 ? 'text-success' : 'text-danger'; // Negative net = profit
-
-                        content += `
-                            <div class="col-md-6 mb-3">
-                                <div class="card ${actionClass}">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="mb-0">
-                                                <i class="bi bi-${actionIcon}"></i>
-                                                Leg ${i + 1}
-                                            </h6>
-                                            <span class="badge ${leg.Action.includes('BUY') ? 'bg-success' : 'bg-danger'}">${leg.Action}</span>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <small class="text-muted">Date</small>
-                                                <div>${dateStr}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Type</small>
-                                                <div>${leg.Type}</div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-2">
-                                            <div class="col-6">
-                                                <small class="text-muted">Strike</small>
-                                                <div>$${leg.Strike}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Quantity</small>
-                                                <div>${Math.abs(leg.Quantity)}</div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-2">
-                                            <div class="col-6">
-                                                <small class="text-muted">Premium</small>
-                                                <div>$${leg.Price}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">${creditDebitLabel}</small>
-                                                <div class="${creditDebitClass}">$${Math.abs(leg.Amount).toFixed(2)}</div>
-                                            </div>
-                                        </div>
-                                        <div class="row mt-2">
-                                            <div class="col-6">
-                                                <small class="text-muted">Fee</small>
-                                                <div>$${parseFloat(leg.Fee).toFixed(2)}</div>
-                                            </div>
-                                            <div class="col-6">
-                                                <small class="text-muted">Net</small>
-                                                <div class="${netAmountClass}">$${Math.abs(netAmount).toFixed(2)}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    content += `
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-
-                    document.getElementById('legsModalBody').innerHTML = content;
-                });
-            });
-        });
-    </script>
 </body>
 </html>
+
