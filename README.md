@@ -21,6 +21,20 @@ A comprehensive web-based dashboard for Interactive Brokers (IBKR) trading data 
 - **Position Recommendations**: Identifies put positions with returns below 12% for potential closure
 - **Collateral Analysis**: Tracks total collateral tied up in put positions
 - **Risk Metrics**: Largest gains/losses, average position size, and position type breakdown
+- **Stock Concentration Analysis**: ⭐ NEW! Portfolio allocation analysis by stock to identify over-investment risk
+
+### 🔬 **Enhanced Risk Analytics** ⭐ NEW!
+- **Black-Scholes Greeks**: Delta, Gamma, Theta, and Vega calculations for all put positions
+- **Probability of Profit**: Statistical likelihood of profit using option pricing models
+- **Stress Testing Scenarios**: P&L projections under various market conditions:
+  - Stock price drops (10% and 20%)
+  - Volatility increases (50%)
+  - Time decay (1 week)
+  - Gamma risk from large moves
+- **Portfolio Risk Metrics**: Aggregated Greeks across all positions
+- **Risk Level Classification**: High/Medium/Low risk categorization
+- **Implied Volatility Estimates**: Market volatility expectations
+- **Real-Time Risk Monitoring**: Live updates of risk metrics
 
 ### 💻 **User Interface**
 - **Real-Time Updates**: Live data refresh with connection status monitoring
@@ -123,8 +137,84 @@ The dashboard connects directly to IBKR Gateway API endpoints:
 - **Closure Recommendations**: Identifies positions with <12% annualized returns
 - **Collateral Tracking**: Total collateral tied up in put positions
 - **Risk Assessment**: Position-specific risk metrics
+- **Stock Concentration Analysis**: ⭐ NEW!
+  - **Portfolio Allocation**: Percentage breakdown of put positions by stock
+  - **Concentration Risk**: Identifies stocks with >20% portfolio allocation
+  - **Risk Level Indicators**: High (>25%), Medium (15-25%), Low (<15%) concentration
+  - **Over-Investment Alerts**: Warning system for concentrated positions
+  - **Diversification Metrics**: Total stocks, max concentration, average concentration
+  - **Stock-Specific Analytics**: Average returns, total P&L, and position counts per stock
+- **Advanced Risk Analytics**: ⭐ NEW!
+  - **Greeks Analysis**: Delta, Gamma, Theta, Vega for each position
+  - **Probability of Profit**: Statistical profit likelihood
+  - **Stress Testing**: P&L projections under market stress scenarios
+  - **Portfolio Risk Summary**: Aggregated risk metrics across all positions
+  - **Risk Level Indicators**: High/Medium/Low risk classification
+  - **Implied Volatility**: Market volatility expectations
 
-## 🔧 Technical Details
+### 🔬 **Enhanced Risk Analytics Usage** ⭐ NEW!
+
+#### Understanding the Greeks
+- **Delta (-0.5 to 0)**: How much your put position value changes with stock price
+  - Delta = -0.8: Position gains $0.80 for every $1 stock drop
+  - Delta = -0.2: Position gains $0.20 for every $1 stock drop
+- **Gamma (0 to 0.05+)**: How quickly delta changes (acceleration risk)
+  - High gamma (>0.02): Delta changes rapidly with stock moves
+  - Low gamma (<0.01): Delta changes slowly
+- **Theta (negative)**: Daily time decay (value lost per day)
+  - Theta = -0.1: Position loses $0.10 per day from time decay
+- **Vega (0 to 0.2+)**: Sensitivity to volatility changes
+  - High vega: Position value changes significantly with volatility
+
+#### Interpreting Risk Levels
+- **High Risk**: Delta > 0.7, Gamma > 0.02, or Theta < -0.1
+- **Medium Risk**: Delta 0.5-0.7, Gamma 0.01-0.02, or Theta -0.05 to -0.1
+- **Low Risk**: Delta < 0.5, Gamma < 0.01, and Theta > -0.05
+
+#### Stress Testing Scenarios
+- **Stock Drop 10%**: Shows P&L impact of moderate market decline
+- **Stock Drop 20%**: Shows P&L impact of significant market decline
+- **Volatility +50%**: Shows impact of market volatility spike
+- **Time Decay (1 week)**: Shows value erosion over 7 days
+- **Gamma Risk**: Shows impact of large, rapid price moves
+
+#### Portfolio Risk Management
+- **Total Delta**: Portfolio sensitivity to overall market direction
+- **Total Gamma**: Portfolio acceleration risk from large moves
+- **Total Theta**: Daily time decay across all positions
+- **Total Vega**: Portfolio volatility exposure
+- **High Risk Positions**: Count of positions requiring close attention
+
+#### Stock Concentration Analysis ⭐ NEW!
+
+##### Understanding Concentration Risk
+- **Portfolio Allocation**: Shows what percentage of your put collateral is allocated to each stock
+- **Concentration Thresholds**:
+  - **High Risk (>25%)**: Significant concentration requiring immediate attention
+  - **Medium Risk (15-25%)**: Moderate concentration to monitor closely
+  - **Low Risk (<15%)**: Well-diversified allocation
+- **Over-Investment Alert**: Stocks with >20% allocation are flagged for review
+
+##### Key Metrics
+- **Total Stocks**: Number of different stocks in your put portfolio
+- **Max Concentration**: Highest percentage allocated to any single stock
+- **Average Concentration**: Mean allocation percentage across all stocks
+- **High Risk Stocks**: Count of stocks with >25% concentration
+
+##### Risk Management Recommendations
+- **Diversification**: Aim to keep no single stock above 20% of portfolio
+- **Concentration Limits**: Consider reducing positions in stocks >25% allocation
+- **Regular Monitoring**: Check concentration levels weekly or after new positions
+- **Balanced Approach**: Spread risk across multiple stocks and sectors
+
+##### Using the Concentration Table
+- **Progress Bars**: Visual representation of allocation percentages
+- **Color Coding**: Red (high risk), Yellow (medium risk), Green (low risk)
+- **Stock Analytics**: Average returns, total P&L, and position counts per stock
+- **Risk Level Badges**: Quick identification of concentration risk levels
+- **Status Indicators**: "Over-Invested" vs "Balanced" status for each stock
+
+## �� Technical Details
 
 ### Backend (Flask + IBKR API)
 - **IBKR Client**: Custom wrapper for IBKR Gateway API
@@ -132,16 +222,43 @@ The dashboard connects directly to IBKR Gateway API endpoints:
 - **Data Processing**: Real-time position and performance analytics
 - **Background Workers**: Tickle worker for session maintenance
 
+### 🔬 **Enhanced Risk Analytics Engine** ⭐ NEW!
+- **Black-Scholes Model**: Option pricing and Greeks calculations using scipy
+- **Greeks Calculations**:
+  - **Delta**: Position sensitivity to underlying price changes
+  - **Gamma**: Rate of delta change (acceleration risk)
+  - **Theta**: Daily time decay impact
+  - **Vega**: Volatility sensitivity
+- **Stress Testing Engine**: Monte Carlo-style scenario analysis
+- **Risk Classification**: Automated risk level assessment based on Greeks thresholds
+- **Implied Volatility Estimation**: Market volatility inference from option prices
+- **Probability Calculations**: Statistical profit/loss likelihood using normal distribution
+
 ### Frontend (Bootstrap 5)
 - **Responsive Design**: Mobile-first approach
 - **Real-Time Updates**: Live data refresh and status monitoring
 - **Interactive Controls**: Manual connection management
 - **Error Handling**: User-friendly error messages and troubleshooting
+- **Enhanced Risk Analytics UI**: ⭐ NEW!
+  - **Portfolio Risk Dashboard**: Aggregated Greeks and risk metrics
+  - **Advanced Risk Analysis Table**: Individual position Greeks with color-coded risk levels
+  - **Stress Testing Visualization**: Scenario-based P&L projections
+  - **Risk Level Badges**: Visual indicators for High/Medium/Low risk positions
+  - **Interactive DataTables**: Sortable and filterable risk metrics
+  - **Real-Time Risk Monitoring**: Live updates of portfolio risk exposure
 
 ### Docker Architecture
 - **Flask Container**: Web application with network_mode: host
 - **IBKR Gateway Container**: IBKR Gateway service with network_mode: host
 - **Shared Network**: Both containers access localhost for direct communication
+
+### 📊 **Dependencies** ⭐ UPDATED!
+- **Flask**: Web framework for the dashboard
+- **Pandas**: Data manipulation and analysis
+- **IBIND**: IBKR API client library
+- **Scipy**: ⭐ NEW! Mathematical functions for Black-Scholes calculations and statistical distributions
+- **Bootstrap 5**: Frontend framework for responsive design
+- **DataTables**: Interactive table functionality for risk metrics
 
 ## 🔍 Troubleshooting
 

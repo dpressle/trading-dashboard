@@ -963,9 +963,10 @@
                 </div>
             </div>
 
-            <!-- Summary Cards -->
+            <!-- Risk Summary Cards -->
+            {% if data.put_analysis.risk_summary is defined %}
             <div class="row mb-4">
-                <div class="col-md-3 col-sm-6 mb-3">
+                <div class="col-md-2 col-sm-4 mb-3">
                     <div class="card analytics-card h-100">
                         <div class="card-body text-center">
                             <div class="analytics-icon mb-2">
@@ -977,7 +978,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-3">
+                <div class="col-md-2 col-sm-4 mb-3">
                     <div class="card analytics-card h-100">
                         <div class="card-body text-center">
                             <div class="analytics-icon mb-2">
@@ -989,7 +990,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-3">
+                <div class="col-md-2 col-sm-4 mb-3">
                     <div class="card analytics-card h-100">
                         <div class="card-body text-center">
                             <div class="analytics-icon mb-2">
@@ -1001,7 +1002,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-3 col-sm-6 mb-3">
+                <div class="col-md-2 col-sm-4 mb-3">
                     <div class="card analytics-card h-100">
                         <div class="card-body text-center">
                             <div class="analytics-icon mb-2">
@@ -1012,16 +1013,112 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="col-md-2 col-sm-4 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-shield-exclamation text-warning"></i>
+                            </div>
+                            <h4 class="mb-1">{{ data.put_analysis.risk_summary.high_risk_positions }}</h4>
+                            <small class="text-muted">High Risk Positions</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-2 col-sm-4 mb-3">
+                    <div class="card analytics-card h-100">
+                        <div class="card-body text-center">
+                            <div class="analytics-icon mb-2">
+                                <i class="bi bi-percent text-info"></i>
+                            </div>
+                            <h4 class="mb-1">{{ "%.1f"|format(data.put_analysis.risk_summary.avg_prob_profit * 100) }}%</h4>
+                            <small class="text-muted">Avg Probability of Profit</small>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Portfolio Risk Metrics -->
+            <div class="card mb-4 border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h6 class="mb-0">
+                        <i class="bi bi-shield-exclamation"></i> Portfolio Risk Metrics
+                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="Aggregated risk metrics across all put positions. Monitor these to understand overall portfolio exposure."></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">
+                                    Total Delta
+                                    <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Portfolio sensitivity to stock price changes. Negative values mean portfolio gains when stocks fall."></i>
+                                </h5>
+                                <h4 class="{% if data.put_analysis.risk_summary.total_delta < -0.5 %}text-danger{% elif data.put_analysis.risk_summary.total_delta < -0.2 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.3f"|format(data.put_analysis.risk_summary.total_delta) }}
+                                </h4>
+                                <small class="text-muted">Portfolio sensitivity to stock price</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">
+                                    Total Gamma
+                                    <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Rate of delta change. High gamma means delta changes rapidly with stock moves (acceleration risk)."></i>
+                                </h5>
+                                <h4 class="{% if data.put_analysis.risk_summary.total_gamma > 0.05 %}text-danger{% elif data.put_analysis.risk_summary.total_gamma > 0.02 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.4f"|format(data.put_analysis.risk_summary.total_gamma) }}
+                                </h4>
+                                <small class="text-muted">Rate of delta change</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">
+                                    Total Theta
+                                    <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Daily time decay. Negative values mean portfolio loses value each day due to time passing."></i>
+                                </h5>
+                                <h4 class="{% if data.put_analysis.risk_summary.total_theta < -0.1 %}text-danger{% elif data.put_analysis.risk_summary.total_theta < -0.05 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.3f"|format(data.put_analysis.risk_summary.total_theta) }}
+                                </h4>
+                                <small class="text-muted">Daily time decay</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">
+                                    Total Vega
+                                    <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                       title="Volatility sensitivity. High vega means portfolio value changes significantly with volatility changes."></i>
+                                </h5>
+                                <h4 class="{% if data.put_analysis.risk_summary.total_vega > 0.2 %}text-danger{% elif data.put_analysis.risk_summary.total_vega > 0.1 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.3f"|format(data.put_analysis.risk_summary.total_vega) }}
+                                </h4>
+                                <small class="text-muted">Volatility sensitivity</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Put Positions Table -->
             <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0"><i class="bi bi-table"></i> Put Positions Analysis</h6>
+                    <h6 class="mb-0">
+                        <i class="bi bi-table"></i> Put Positions Analysis
+                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="Detailed analysis of each put position including Greeks, risk levels, and closure recommendations."></i>
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover" id="putPositionsTable">
                             <thead>
                                 <tr>
                                     <th>Symbol</th>
@@ -1034,12 +1131,17 @@
                                     <th>Current P&L</th>
                                     <th>Collateral</th>
                                     <th>Annualized Return</th>
+                                    <th>
+                                        Risk Level
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Risk classification based on Greeks: High (Delta>0.7, Gamma>0.02, Theta<-0.1), Medium (moderate exposure), Low (minimal exposure)"></i>
+                                    </th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for put in data.put_analysis.put_positions %}
-                                <tr class="{% if put.should_sell %}table-danger{% elif put.annualized_return >= 20 %}table-success{% endif %}">
+                                <tr class="{% if put.should_close %}table-danger{% elif put.annualized_return >= 20 %}table-success{% endif %}">
                                     <td><strong>{{ put.symbol }}</strong></td>
                                     <td>${{ "%.2f"|format(put.strike) }}</td>
                                     <td>{{ put.expiration }}</td>
@@ -1059,6 +1161,15 @@
                                         <span class="{% if put.annualized_return >= 12 %}text-success{% else %}text-danger{% endif %} fw-bold">
                                             {{ "%.2f"|format(put.annualized_return) }}%
                                         </span>
+                                    </td>
+                                    <td>
+                                        {% if put.risk_level is defined %}
+                                            <span class="badge {% if put.risk_level == 'High' %}bg-danger{% elif put.risk_level == 'Medium' %}bg-warning{% else %}bg-success{% endif %}">
+                                                {{ put.risk_level }}
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">N/A</span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if put.should_close %}
@@ -1081,7 +1192,11 @@
             {% if data.put_analysis.positions_to_close %}
             <div class="card mt-4 border-danger">
                 <div class="card-header bg-danger text-white">
-                    <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Close Recommendations (Return < 12%)</h6>
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Close Recommendations (Return < 12%) <i
+                            class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                            title="Positions with annualized returns below 12% that may need closure consideration."></i>
+                    </h6>
                 </div>
                 <div class="card-body">
                     <div class="row">
@@ -1123,11 +1238,30 @@
                                     <div class="row mt-2">
                                         <div class="col-12">
                                             <small class="text-muted">Current P&L:</small><br>
-                                            <strong class="{% if put.current_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            <strong
+                                                class="{% if put.current_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
                                                 ${{ "%.2f"|format(put.current_pnl) }}
                                             </strong>
                                         </div>
                                     </div>
+                                    {% if put.greeks is defined %}
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <small class="text-muted">Delta:</small><br>
+                                            <strong
+                                                class="{% if put.greeks.delta < -0.7 %}text-danger{% elif put.greeks.delta < -0.5 %}text-warning{% else %}text-success{% endif %}">
+                                                {{ "%.3f"|format(put.greeks.delta) }}
+                                            </strong>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">Prob. Profit:</small><br>
+                                            <strong
+                                                class="{% if put.greeks.prob_profit > 0.7 %}text-success{% elif put.greeks.prob_profit > 0.5 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ "%.1f"|format(put.greeks.prob_profit * 100) }}%
+                                            </strong>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -1136,6 +1270,304 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- Stock Concentration Analysis -->
+            {% if data.stock_concentration is defined and data.stock_concentration.stock_concentration %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-pie-chart"></i> Stock Concentration Analysis
+                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                            title="Analyze your put position allocation by stock to identify over-investment and concentration risk."></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Concentration Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">Total Stocks</h5>
+                                <h4 class="text-primary">{{ data.stock_concentration.concentration_risk.total_stocks }}</h4>
+                                <small class="text-muted">Different stocks</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">Max Concentration</h5>
+                                <h4
+                                    class="{% if data.stock_concentration.concentration_risk.max_concentration > 25 %}text-danger{% elif data.stock_concentration.concentration_risk.max_concentration > 15 %}text-warning{% else %}text-success{% endif %}">
+                                    {{ "%.1f"|format(data.stock_concentration.concentration_risk.max_concentration) }}%
+                                </h4>
+                                <small class="text-muted">Highest single stock %</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">Avg Concentration</h5>
+                                <h4 class="text-info">{{
+                                    "%.1f"|format(data.stock_concentration.concentration_risk.avg_concentration) }}%</h4>
+                                <small class="text-muted">Average per stock</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">High Risk Stocks</h5>
+                                <h4
+                                    class="{% if data.stock_concentration.concentration_risk.high_concentration_stocks > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ data.stock_concentration.concentration_risk.high_concentration_stocks }}
+                                </h4>
+                                <small class="text-muted">>25% concentration</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Concentration Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="stockConcentrationTable">
+                            <thead>
+                                <tr>
+                                    <th>Stock</th>
+                                    <th>
+                                        % of Portfolio
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                            title="Percentage of total put collateral allocated to this stock"></i>
+                                    </th>
+                                    <th>Total Collateral</th>
+                                    <th>Positions</th>
+                                    <th>Avg Return</th>
+                                    <th>Total P&L</th>
+                                    <th>Avg Days Left</th>
+                                    <th>
+                                        Risk Level
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                            title="Concentration risk: High (>25%), Medium (15-25%), Low (<15%)"></i>
+                                    </th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stock in data.stock_concentration.stock_concentration %}
+                                <tr class="{% if stock.is_over_invested %}table-warning{% endif %}">
+                                    <td><strong>{{ stock.symbol }}</strong></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                <div class="progress-bar {% if stock.percentage > 25 %}bg-danger{% elif stock.percentage > 15 %}bg-warning{% else %}bg-success{% endif %}"
+                                                    style="width: {{ stock.percentage }}%"></div>
+                                            </div>
+                                            <span
+                                                class="{% if stock.percentage > 25 %}text-danger{% elif stock.percentage > 15 %}text-warning{% else %}text-success{% endif %} fw-bold">
+                                                {{ "%.1f"|format(stock.percentage) }}%
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>${{ "%.0f"|format(stock.total_collateral) }}</td>
+                                    <td>{{ stock.position_count }}</td>
+                                    <td>
+                                        <span
+                                            class="{% if stock.avg_annualized_return >= 12 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {{ "%.2f"|format(stock.avg_annualized_return) }}%
+                                        </span>
+                                    </td>
+                                    <td class="{% if stock.total_pnl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                        ${{ "%.2f"|format(stock.total_pnl) }}
+                                    </td>
+                                    <td>{{ "%.0f"|format(stock.avg_days_left) }} days</td>
+                                    <td>
+                                        <span
+                                            class="badge {% if stock.risk_level == 'High' %}bg-danger{% elif stock.risk_level == 'Medium' %}bg-warning{% else %}bg-success{% endif %}">
+                                            {{ stock.risk_level }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if stock.is_over_invested %}
+                                        <span class="badge bg-warning">
+                                            <i class="bi bi-exclamation-triangle"></i> Over-Invested
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Balanced
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Over-Investment Alerts -->
+                    {% set over_invested_stocks = data.stock_concentration.stock_concentration | selectattr('is_over_invested') |
+                    list %}
+                    {% if over_invested_stocks %}
+                    <div class="alert alert-warning mt-3">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-triangle"></i> Concentration Risk Alert
+                        </h6>
+                        <p class="mb-2">You have <strong>{{ over_invested_stocks|length }}</strong> stock(s) with over 20%
+                            concentration:</p>
+                        <ul class="mb-0">
+                            {% for stock in over_invested_stocks %}
+                            <li><strong>{{ stock.symbol }}</strong>: {{ "%.1f"|format(stock.percentage) }}% of portfolio</li>
+                            {% endfor %}
+                        </ul>
+                        <hr>
+                        <p class="mb-0 small">
+                            <strong>Recommendation:</strong> Consider reducing exposure to these stocks to diversify your risk.
+                            High concentration increases vulnerability to company-specific events.
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Enhanced Risk Analysis -->
+            {% if data.put_analysis.put_positions and data.put_analysis.put_positions[0].greeks is defined %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-shield-check"></i> Advanced Risk Analysis
+                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="Detailed Greeks analysis for each put position. These metrics help understand position sensitivity to market changes."></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover" id="riskAnalysisTable">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>
+                                        Delta
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Position sensitivity to stock price. For puts: -1 to 0. Negative values mean position gains when stock falls."></i>
+                                    </th>
+                                    <th>
+                                        Gamma
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Rate of delta change. High gamma means delta changes rapidly with stock moves (acceleration risk)."></i>
+                                    </th>
+                                    <th>
+                                        Theta (Daily)
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Daily time decay. Negative values mean position loses value each day due to time passing."></i>
+                                    </th>
+                                    <th>
+                                        Vega
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Volatility sensitivity. High vega means position value changes significantly with volatility changes."></i>
+                                    </th>
+                                    <th>
+                                        Prob. Profit
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Statistical probability of profit at expiration based on current market conditions."></i>
+                                    </th>
+                                    <th>
+                                        Implied Vol
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Market's expectation of future volatility, inferred from option prices."></i>
+                                    </th>
+                                    <th>
+                                        Stock Price Est.
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Estimated current stock price based on option pricing relationship."></i>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for put in data.put_analysis.put_positions %}
+                                {% if put.greeks is defined %}
+                                <tr>
+                                    <td><strong>{{ put.symbol }}</strong></td>
+                                    <td class="{% if put.greeks.delta < -0.7 %}text-danger{% elif put.greeks.delta < -0.5 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ "%.3f"|format(put.greeks.delta) }}
+                                    </td>
+                                    <td class="{% if put.greeks.gamma > 0.02 %}text-danger{% elif put.greeks.gamma > 0.01 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ "%.4f"|format(put.greeks.gamma) }}
+                                    </td>
+                                    <td class="{% if put.greeks.theta < -0.1 %}text-danger{% elif put.greeks.theta < -0.05 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ "%.3f"|format(put.greeks.theta) }}
+                                    </td>
+                                    <td class="{% if put.greeks.vega > 0.1 %}text-danger{% elif put.greeks.vega > 0.05 %}text-warning{% else %}text-success{% endif %}">
+                                        {{ "%.3f"|format(put.greeks.vega) }}
+                                    </td>
+                                    <td class="{% if put.greeks.prob_profit > 0.7 %}text-success{% elif put.greeks.prob_profit > 0.5 %}text-warning{% else %}text-danger{% endif %}">
+                                        {{ "%.1f"|format(put.greeks.prob_profit * 100) }}%
+                                    </td>
+                                    <td>{{ "%.1f"|format(put.greeks.implied_vol * 100) }}%</td>
+                                    <td>${{ "%.2f"|format(put.current_stock_price) }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stress Testing Scenarios -->
+            {% if data.put_analysis.put_positions and data.put_analysis.put_positions[0].stress_scenarios is defined %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-graph-up-arrow"></i> Stress Testing Scenarios
+                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                           title="P&L projections under various market stress scenarios. Use these to understand potential losses in adverse conditions."></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for put in data.put_analysis.put_positions %}
+                        {% if put.stress_scenarios is defined %}
+                        <div class="col-lg-6 col-md-12 mb-4">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0">{{ put.symbol }} - Stress Scenarios</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        {% for scenario_name, scenario in put.stress_scenarios.items() %}
+                                        <div class="col-12 mb-2">
+                                            <div class="d-flex justify-content-between align-items-center p-2 border rounded">
+                                                <div>
+                                                    <strong>{{ scenario.description }}</strong>
+                                                    <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                                       title="{% if scenario_name == 'stock_drop_10' %}Moderate market decline scenario{% elif scenario_name == 'stock_drop_20' %}Significant market decline scenario{% elif scenario_name == 'vol_increase_50' %}Market volatility spike scenario{% elif scenario_name == 'time_decay_week' %}One week of time decay{% else %}Large rapid price move scenario{% endif %}"></i>
+                                                    <br>
+                                                    <small class="text-muted">Risk:
+                                                        <span class="badge {% if scenario.risk_level == 'High' %}bg-danger{% elif scenario.risk_level == 'Medium' %}bg-warning{% else %}bg-success{% endif %}">
+                                                            {{ scenario.risk_level }}
+                                                        </span>
+                                                    </small>
+                                                </div>
+                                                <div class="text-end">
+                                                    <div class="{% if scenario.pnl_change >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                        {{ "%.2f"|format(scenario.pnl_change) }}
+                                                    </div>
+                                                    <small class="text-muted">New P&L: ${{ "%.2f"|format(scenario.new_pnl) }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            <!-- Help Button -->
+            <div class="text-center mt-4">
+                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#riskMetricsHelpModal">
+                    <i class="bi bi-question-circle"></i> Understanding Risk Metrics
+                </button>
+            </div>
         </div>
         {% endif %}
 
@@ -1259,13 +1691,19 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTables
-            $('#stockPositionsTable, #optionPositionsTable, #stockTransactionsTable, #optionTransactionsTable').DataTable({
+            $('#stockPositionsTable, #optionPositionsTable, #stockTransactionsTable, #optionTransactionsTable, #putPositionsTable, #riskAnalysisTable').DataTable({
                 pageLength: 10,
                 order: [[0, 'desc']],
                 language: {
                     search: "Filter records:"
                 },
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+            });
+
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
             // Handle file selection change
@@ -1616,6 +2054,183 @@
             }, 5000);
         }
     </script>
+
+    <!-- Risk Metrics Help Modal -->
+    <div class="modal fade" id="riskMetricsHelpModal" tabindex="-1" aria-labelledby="riskMetricsHelpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title" id="riskMetricsHelpModalLabel">
+                        <i class="bi bi-shield-check"></i> Understanding Risk Metrics & Greeks
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-primary"><i class="bi bi-graph-up"></i> The Greeks Explained</h6>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Delta (Δ)</strong> - Price Sensitivity
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What it measures:</strong> How much your option position value changes when the underlying stock price changes by $1.</p>
+                                    <p><strong>For Put Options:</strong> Ranges from -1 to 0</p>
+                                    <ul>
+                                        <li><strong>Delta = -0.8:</strong> Position gains $0.80 when stock drops $1</li>
+                                        <li><strong>Delta = -0.2:</strong> Position gains $0.20 when stock drops $1</li>
+                                        <li><strong>Near expiration:</strong> Delta approaches -1 for in-the-money puts</li>
+                                    </ul>
+                                    <p><strong>Risk Level:</strong> High if |Delta| > 0.7</p>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Gamma (Γ)</strong> - Acceleration Risk
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What it measures:</strong> How quickly Delta changes when the stock price moves.</p>
+                                    <p><strong>Key Insight:</strong> High Gamma means your position's sensitivity changes rapidly.</p>
+                                    <ul>
+                                        <li><strong>High Gamma (>0.02):</strong> Delta changes rapidly with stock moves</li>
+                                        <li><strong>Low Gamma (<0.01):</strong> Delta changes slowly</li>
+                                        <li><strong>Peak Gamma:</strong> Highest near expiration for at-the-money options</li>
+                                    </ul>
+                                    <p><strong>Risk Level:</strong> High if Gamma > 0.02</p>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Theta (Θ)</strong> - Time Decay
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What it measures:</strong> How much your option loses value each day due to time passing.</p>
+                                    <p><strong>Always Negative:</strong> Options lose value over time (time decay).</p>
+                                    <ul>
+                                        <li><strong>Theta = -0.1:</strong> Position loses $0.10 per day</li>
+                                        <li><strong>Accelerates:</strong> Time decay increases as expiration approaches</li>
+                                        <li><strong>ATM Options:</strong> Highest time decay near expiration</li>
+                                    </ul>
+                                    <p><strong>Risk Level:</strong> High if Theta < -0.1</p>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Vega (ν)</strong> - Volatility Sensitivity
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What it measures:</strong> How much your option value changes when implied volatility changes by 1%.</p>
+                                    <p><strong>Volatility Impact:</strong> Higher volatility = higher option prices.</p>
+                                    <ul>
+                                        <li><strong>High Vega (>0.1):</strong> Position very sensitive to volatility changes</li>
+                                        <li><strong>Low Vega (<0.05):</strong> Position less sensitive to volatility</li>
+                                        <li><strong>Peak Vega:</strong> Highest for at-the-money options</li>
+                                    </ul>
+                                    <p><strong>Risk Level:</strong> High if Vega > 0.1</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="bi bi-graph-up-arrow"></i> Risk Management</h6>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Probability of Profit</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>What it measures:</strong> Statistical likelihood of making a profit at expiration.</p>
+                                    <p><strong>Calculation:</strong> Based on Black-Scholes model and current market conditions.</p>
+                                    <ul>
+                                        <li><strong>>70%:</strong> High probability of profit (Green)</li>
+                                        <li><strong>50-70%:</strong> Moderate probability (Yellow)</li>
+                                        <li><strong><50%:</strong> Low probability (Red)</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Risk Level Classification</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>High Risk:</strong></p>
+                                    <ul>
+                                        <li>Delta > 0.7 (high price sensitivity)</li>
+                                        <li>Gamma > 0.02 (high acceleration risk)</li>
+                                        <li>Theta < -0.1 (high time decay)</li>
+                                    </ul>
+                                    <p><strong>Medium Risk:</strong></p>
+                                    <ul>
+                                        <li>Delta 0.5-0.7</li>
+                                        <li>Gamma 0.01-0.02</li>
+                                        <li>Theta -0.05 to -0.1</li>
+                                    </ul>
+                                    <p><strong>Low Risk:</strong></p>
+                                    <ul>
+                                        <li>Delta < 0.5</li>
+                                        <li>Gamma < 0.01</li>
+                                        <li>Theta > -0.05</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <h6 class="text-warning"><i class="bi bi-exclamation-triangle"></i> Stress Testing Scenarios</h6>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Market Stress Scenarios</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Stock Drop 10%:</strong> Moderate market decline impact</p>
+                                    <p><strong>Stock Drop 20%:</strong> Significant market decline impact</p>
+                                    <p><strong>Volatility +50%:</strong> Market volatility spike impact</p>
+                                    <p><strong>Time Decay (1 week):</strong> Value erosion over 7 days</p>
+                                    <p><strong>Gamma Risk:</strong> Impact of large, rapid price moves</p>
+                                    <p><em>These scenarios help you understand potential losses in adverse market conditions.</em></p>
+                                </div>
+                            </div>
+
+                            <div class="card mb-3">
+                                <div class="card-header bg-light">
+                                    <strong>Portfolio Risk Metrics</strong>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Total Delta:</strong> Overall portfolio sensitivity to stock price changes</p>
+                                    <p><strong>Total Gamma:</strong> Portfolio acceleration risk from large moves</p>
+                                    <p><strong>Total Theta:</strong> Daily time decay across all positions</p>
+                                    <p><strong>Total Vega:</strong> Portfolio volatility exposure</p>
+                                    <p><strong>High Risk Positions:</strong> Count of positions requiring close attention</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <h6><i class="bi bi-lightbulb"></i> Pro Tips</h6>
+                                <ul class="mb-0">
+                                    <li><strong>Monitor High Gamma:</strong> Positions with high gamma can experience rapid P&L changes</li>
+                                    <li><strong>Watch Theta:</strong> As expiration approaches, time decay accelerates</li>
+                                    <li><strong>Balance Vega:</strong> High vega positions are sensitive to volatility changes</li>
+                                    <li><strong>Use Stress Tests:</strong> Regularly review stress scenarios to understand worst-case outcomes</li>
+                                    <li><strong>Risk Levels:</strong> Focus attention on High and Medium risk positions</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Back to Top Button -->
     <button type="button" class="back-to-top" id="backToTop" title="Back to Top">
