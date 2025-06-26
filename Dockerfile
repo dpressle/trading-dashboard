@@ -12,5 +12,11 @@ COPY . .
 # Expose the port the app runs on
 EXPOSE 5000
 
-# Command to run the application
-CMD ["python", "app.py"]
+# Set environment variables for unbuffered output and logging
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV FLASK_ENV=development
+ENV FLASK_DEBUG=1
+
+# Command to run the application with unbuffered output
+CMD ["python", "-u", "app.py"]

@@ -12,10 +12,16 @@ services:
       - FLASK_APP=app.py
       - IBKR_GATEWAY_URL=localhost
       - IBIND_PORT=5001
+      - PYTHONUNBUFFERED=1
     restart: unless-stopped
     depends_on:
       - ibkr_gateway
     network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   ibkr_gateway:
     build:
@@ -27,3 +33,8 @@ services:
       - "5001:5001"
     restart: unless-stopped
     network_mode: host
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

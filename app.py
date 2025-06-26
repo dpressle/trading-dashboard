@@ -3,12 +3,30 @@ import pandas as pd
 import os
 import threading
 import time
+import logging
+import sys
 from datetime import datetime, timedelta
-from ibkr_client import fetch_ibkr_account_details, fetch_ibkr_positions, fetch_ibkr_tickle, fetch_ibkr_account_performance, fetch_ibkr_account_ledger
+from ibkr_client import fetch_ibkr_account_details, fetch_ibkr_positions, fetch_ibkr_tickle, fetch_ibkr_account_performance, fetch_ibkr_account_ledger, fetch_stock_price
 import math
 from scipy.stats import norm
 
+# Force unbuffered output for Docker logs
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 app = Flask(__name__)
+
+# Configure logging to show all levels and output to stdout
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Get logger for this module
+logger = logging.getLogger(__name__)
 
 # IBKR Gateway configuration
 IBKR_GATEWAY_URL = os.environ.get('IBKR_GATEWAY_URL', 'localhost')
@@ -25,6 +43,7 @@ connection_status = {
 }
 
 # Try initial connection check
+logger.info("DEBUG: Initializing connection status...")
 print(f"DEBUG: Initializing connection status...")
 try:
     account_details = fetch_ibkr_account_details()
@@ -32,10 +51,13 @@ try:
         connection_status['connected'] = True
         connection_status['error_message'] = None
         connection_status['last_check'] = datetime.now()
+        logger.info("DEBUG: Initial connection successful")
         print(f"DEBUG: Initial connection successful")
     else:
+        logger.warning("DEBUG: Initial connection failed - no account details")
         print(f"DEBUG: Initial connection failed - no account details")
 except Exception as e:
+    logger.error(f"DEBUG: Initial connection failed with exception: {e}")
     print(f"DEBUG: Initial connection failed with exception: {e}")
     connection_status['error_message'] = str(e)
     connection_status['last_check'] = datetime.now()
@@ -49,12 +71,15 @@ def tickle_worker():
         try:
             # Check if tickle is enabled
             if not connection_status.get('tickle_enabled', True):
+                logger.info("DEBUG: Tickle disabled due to persistent connection issues")
                 print(f"DEBUG: Tickle disabled due to persistent connection issues")
                 time.sleep(60)  # Wait 60 seconds before checking again
                 continue
 
+            logger.info(f"DEBUG: Sending IBKR tickle at {datetime.now()}")
             print(f"DEBUG: Sending IBKR tickle at {datetime.now()}")
             fetch_ibkr_tickle()
+            logger.info(f"IBKR tickle sent at {datetime.now()}")
             print(f"IBKR tickle sent at {datetime.now()}")
 
             # Update connection status on successful tickle
@@ -62,19 +87,23 @@ def tickle_worker():
             connection_status['error_message'] = None
             connection_status['retry_count'] = 0
             consecutive_failures = 0  # Reset failure counter
+            logger.info("DEBUG: Tickle successful - connection status updated")
             print(f"DEBUG: Tickle successful - connection status updated")
 
         except Exception as e:
             consecutive_failures += 1
+            logger.error(f"Error sending IBKR tickle: {e}")
             print(f"Error sending IBKR tickle: {e}")
             connection_status['connected'] = False
             connection_status['error_message'] = str(e)
             connection_status['retry_count'] += 1
+            logger.warning(f"DEBUG: Tickle failed - connection status set to disconnected (failure #{consecutive_failures})")
             print(f"DEBUG: Tickle failed - connection status set to disconnected (failure #{consecutive_failures})")
 
             # Disable tickle if too many consecutive failures
             if consecutive_failures >= max_consecutive_failures:
                 connection_status['tickle_enabled'] = False
+                logger.warning(f"DEBUG: Disabling tickle due to {consecutive_failures} consecutive failures")
                 print(f"DEBUG: Disabling tickle due to {consecutive_failures} consecutive failures")
 
         time.sleep(60)  # Wait 60 seconds
@@ -86,9 +115,11 @@ tickle_thread.start()
 def check_ibkr_connection():
     """Check if IBKR connection is working by making a simple API call"""
     try:
+        logger.info(f"DEBUG: Attempting to check IBKR connection at {datetime.now()}")
         print(f"DEBUG: Attempting to check IBKR connection at {datetime.now()}")
         # Try to fetch account details as a connection test
         account_details = fetch_ibkr_account_details()
+        logger.info(f"DEBUG: fetch_ibkr_account_details returned: {account_details}")
         print(f"DEBUG: fetch_ibkr_account_details returned: {account_details}")
 
         if account_details:
@@ -97,11 +128,13 @@ def check_ibkr_connection():
             connection_status['retry_count'] = 0
             connection_status['tickle_enabled'] = True  # Re-enable tickle on successful connection
             connection_status['last_check'] = datetime.now()
+            logger.info("DEBUG: Connection successful - account details found, tickle re-enabled")
             print(f"DEBUG: Connection successful - account details found, tickle re-enabled")
             return True
         else:
             connection_status['connected'] = False
             connection_status['error_message'] = "No account details received"
+            logger.warning("DEBUG: Connection failed - no account details received")
             print(f"DEBUG: Connection failed - no account details received")
             return False
     except Exception as e:
@@ -109,6 +142,7 @@ def check_ibkr_connection():
         connection_status['error_message'] = str(e)
         connection_status['retry_count'] += 1
         connection_status['last_check'] = datetime.now()
+        logger.error(f"DEBUG: Connection failed with exception: {e}")
         print(f"DEBUG: Connection failed with exception: {e}")
         return False
 
@@ -144,7 +178,7 @@ def safe_ibkr_call(func, *args, **kwargs):
 def calculate_black_scholes_greeks(S, K, T, r, sigma, option_type='put'):
     """
     Calculate Black-Scholes option Greeks for puts
-    S: Current stock price (estimated from strike and premium)
+    S: Current stock price (from IBKR API)
     K: Strike price
     T: Time to expiration in years
     r: Risk-free rate (assume 0.05 for simplicity)
@@ -152,17 +186,17 @@ def calculate_black_scholes_greeks(S, K, T, r, sigma, option_type='put'):
     option_type: 'put' or 'call'
     """
     try:
-        # Estimate current stock price from strike and premium relationship
-        # For puts: if premium is high relative to strike, stock is likely lower
-        # Rough estimate: S = K - premium * 2 (for ATM puts)
+        # Ensure we have valid stock price
         if S <= 0:
-            S = K - premium * 2  # Rough estimate for stock price
-
-        # Estimate implied volatility from premium
-        # For puts: higher premium = higher implied vol
-        if sigma <= 0:
-            # Rough estimate: sigma = premium / (K * sqrt(T)) * 2
-            sigma = max(0.1, min(1.0, premium / (K * math.sqrt(T)) * 2))
+            print(f"Warning: Invalid stock price {S} for Greeks calculation")
+            return {
+                'delta': -0.5,
+                'gamma': 0.01,
+                'theta': -0.1,
+                'vega': 0.1,
+                'prob_profit': 0.5,
+                'implied_vol': 0.3
+            }
 
         # Ensure reasonable bounds
         sigma = max(0.1, min(1.0, sigma))  # Between 10% and 100%
@@ -199,6 +233,7 @@ def calculate_black_scholes_greeks(S, K, T, r, sigma, option_type='put'):
             'implied_vol': sigma
         }
     except Exception as e:
+        print(f"Error calculating Greeks: {e}")
         # Return default values if calculation fails
         return {
             'delta': -0.5,
@@ -356,21 +391,34 @@ def calculate_put_annualized_returns(positions_df):
             time_to_expiry = days_left / 365.0  # Convert to years
             risk_free_rate = 0.05  # Assume 5% risk-free rate
 
-            # Estimate current stock price (rough approximation)
-            current_stock_price = strike - premium_per_contract * 2  # For ATM puts
+            # Fetch real stock price from IBKR
+            current_stock_price = fetch_stock_price(symbol)
+            current_stock_price = float(current_stock_price) if isinstance(current_stock_price, str) else current_stock_price
 
             # Calculate implied volatility (rough estimate)
             implied_vol = max(0.1, min(1.0, premium_per_contract / (strike * math.sqrt(time_to_expiry)) * 2))
 
-            # Calculate Greeks
-            greeks = calculate_black_scholes_greeks(
-                S=current_stock_price,
-                K=strike,
-                T=time_to_expiry,
-                r=risk_free_rate,
-                sigma=implied_vol,
-                option_type='put'
-            )
+            # Calculate Greeks - use real stock price if available, otherwise skip
+            if current_stock_price is not None and current_stock_price > 0:
+                greeks = calculate_black_scholes_greeks(
+                    S=current_stock_price,
+                    K=strike,
+                    T=time_to_expiry,
+                    r=risk_free_rate,
+                    sigma=implied_vol,
+                    option_type='put'
+                )
+            else:
+                # Skip Greeks calculation if no real stock price
+                print(f"Warning: No real stock price available for {symbol}, skipping Greeks calculation")
+                greeks = {
+                    'delta': -0.5,
+                    'gamma': 0.01,
+                    'theta': -0.1,
+                    'vega': 0.1,
+                    'prob_profit': 0.5,
+                    'implied_vol': implied_vol
+                }
 
             # Calculate stress scenarios
             position_data = {
@@ -557,6 +605,122 @@ def calculate_stock_concentration_analysis(put_positions):
         'concentration_risk': concentration_risk
     }
 
+def calculate_itm_analysis(put_positions):
+    """Calculate In-The-Money (ITM) analysis for put positions with real stock prices"""
+    if not put_positions:
+        return {
+            'itm_positions': [],
+            'total_itm_exposure': 0,
+            'high_risk_itm': 0,
+            'assignment_risk': 0,
+            'itm_summary': {
+                'total_itm_positions': 0,
+                'deep_itm_positions': 0,
+                'near_expiry_itm': 0,
+                'total_assignment_value': 0
+            }
+        }
+
+    itm_positions = []
+    total_itm_exposure = 0
+    high_risk_itm = 0
+    assignment_risk = 0
+    total_assignment_value = 0
+
+    for position in put_positions:
+        strike = position['strike']
+        current_stock_price = position.get('current_stock_price', None)
+        days_left = position['days_left']
+        quantity = abs(position['quantity'])
+
+        # Skip ITM analysis if we don't have real stock price data
+        if current_stock_price is None:
+            continue
+
+        # Calculate ITM status
+        if current_stock_price < strike:
+            # Position is ITM
+            distance_from_strike = strike - current_stock_price
+            itm_percentage = (distance_from_strike / strike) * 100
+
+            # Calculate assignment value (what you'd pay if assigned)
+            assignment_value = distance_from_strike * 100 * quantity
+            total_assignment_value += assignment_value
+
+            # Determine ITM risk level
+            if distance_from_strike > 5 and days_left <= 7:
+                risk_level = 'Critical'
+                high_risk_itm += 1
+                assignment_risk += assignment_value
+            elif distance_from_strike > 3 and days_left <= 14:
+                risk_level = 'High'
+                high_risk_itm += 1
+                assignment_risk += assignment_value * 0.5  # 50% assignment probability
+            elif distance_from_strike > 1 and days_left <= 21:
+                risk_level = 'Medium'
+            else:
+                risk_level = 'Low'
+
+            # Determine action recommendation
+            if distance_from_strike > 5 and days_left <= 3:
+                action = 'IMMEDIATE ACTION - Close or Roll'
+                action_urgency = 'critical'
+            elif distance_from_strike > 3 and days_left <= 7:
+                action = 'Close or Roll Soon'
+                action_urgency = 'high'
+            elif distance_from_strike > 1 and days_left <= 14:
+                action = 'Monitor Closely - Consider Rolling'
+                action_urgency = 'medium'
+            else:
+                action = 'Watch for Further Deterioration'
+                action_urgency = 'low'
+
+            # Calculate potential loss if assigned
+            current_pnl = position['current_pnl'] * quantity
+            potential_loss = assignment_value - current_pnl
+
+            itm_position = {
+                'symbol': position['symbol'],
+                'strike': strike,
+                'current_stock_price': current_stock_price,
+                'distance_from_strike': distance_from_strike,
+                'itm_percentage': itm_percentage,
+                'days_left': days_left,
+                'quantity': quantity,
+                'assignment_value': assignment_value,
+                'potential_loss': potential_loss,
+                'current_pnl': current_pnl,
+                'risk_level': risk_level,
+                'action': action,
+                'action_urgency': action_urgency,
+                'expiration': position['expiration'],
+                'annualized_return': position['annualized_return']
+            }
+
+            itm_positions.append(itm_position)
+            total_itm_exposure += assignment_value
+
+    # Calculate summary metrics
+    deep_itm_positions = len([p for p in itm_positions if p['distance_from_strike'] > 3])
+    near_expiry_itm = len([p for p in itm_positions if p['days_left'] <= 7])
+
+    itm_summary = {
+        'total_itm_positions': len(itm_positions),
+        'deep_itm_positions': deep_itm_positions,
+        'near_expiry_itm': near_expiry_itm,
+        'total_assignment_value': total_assignment_value,
+        'avg_distance_from_strike': sum(p['distance_from_strike'] for p in itm_positions) / len(itm_positions) if itm_positions else 0,
+        'avg_days_left': sum(p['days_left'] for p in itm_positions) / len(itm_positions) if itm_positions else 0
+    }
+
+    return {
+        'itm_positions': itm_positions,
+        'total_itm_exposure': total_itm_exposure,
+        'high_risk_itm': high_risk_itm,
+        'assignment_risk': assignment_risk,
+        'itm_summary': itm_summary
+    }
+
 def calculate_position_analytics(positions_df):
     """Calculate analytics for open positions including P&L, cost basis, etc."""
     if positions_df.empty:
@@ -732,21 +896,26 @@ def parse_performance_data(performance_data):
             'currency': performance_data.get('nav', {}).get('data', [{}])[0].get('baseCurrency', 'USD')
         }
     except Exception as e:
+        logger.error(f"Error parsing performance data: {e}")
         print(f"Error parsing performance data: {e}")
         return {}
 
 def get_ibkr_data():
     dfs = {}
 
+    logger.info(f"DEBUG: get_ibkr_data called at {datetime.now()}")
     print(f"DEBUG: get_ibkr_data called at {datetime.now()}")
+    logger.info(f"DEBUG: Current connection status: {connection_status}")
     print(f"DEBUG: Current connection status: {connection_status}")
 
     # Check connection status first
     if not connection_status['connected']:
+        logger.info("DEBUG: Connection not connected, attempting to reconnect")
         print(f"DEBUG: Connection not connected, attempting to reconnect")
         # Try to reconnect
         check_ibkr_connection()
     else:
+        logger.info("DEBUG: Connection already connected")
         print(f"DEBUG: Connection already connected")
 
     # Initialize with connection status
@@ -770,11 +939,13 @@ def get_ibkr_data():
         dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame())
         dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
         dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
+        dfs['itm_analysis'] = calculate_itm_analysis([])
         return dfs
 
     # Fetch account details safely
     account_details, error = safe_ibkr_call(fetch_ibkr_account_details)
     if error:
+        logger.error(f"Error fetching account details: {error}")
         print(f"Error fetching account details: {error}")
         account_details = None
 
@@ -798,6 +969,7 @@ def get_ibkr_data():
     # Get account status and balances safely
     account_ledger, error = safe_ibkr_call(fetch_ibkr_account_ledger)
     if error:
+        logger.error(f"Error fetching account ledger: {error}")
         print(f"Error fetching account ledger: {error}")
         account_ledger = {}
 
@@ -821,11 +993,13 @@ def get_ibkr_data():
         try:
             perf, error = safe_ibkr_call(fetch_ibkr_account_performance, period=period)
             if error:
+                logger.error(f"Error fetching {period} performance: {error}")
                 print(f"Error fetching {period} performance: {error}")
                 performance_data[period] = {}
             else:
                 performance_data[period] = parse_performance_data(perf)
         except Exception as e:
+            logger.error(f"Error fetching {period} performance: {e}")
             print(f"Error fetching {period} performance: {e}")
             performance_data[period] = {}
 
@@ -834,6 +1008,7 @@ def get_ibkr_data():
     # Get positions safely
     positions, error = safe_ibkr_call(fetch_ibkr_positions)
     if error:
+        logger.error(f"Error fetching positions: {error}")
         print(f"Error fetching positions: {error}")
         positions = []
 
@@ -859,16 +1034,46 @@ def get_ibkr_data():
         # Calculate stock concentration analysis
         if dfs['put_analysis']['put_positions']:
             dfs['stock_concentration'] = calculate_stock_concentration_analysis(dfs['put_analysis']['put_positions'])
+            # Calculate ITM analysis with real stock prices
+            dfs['itm_analysis'] = calculate_itm_analysis(dfs['put_analysis']['put_positions'])
         else:
             dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
+            # Calculate ITM analysis
+            dfs['itm_analysis'] = calculate_itm_analysis([])
     else:
         # Return empty DataFrames and analytics when no positions
         dfs['positions'] = pd.DataFrame()
         dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame())
         dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
         dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
+        dfs['itm_analysis'] = calculate_itm_analysis([])
 
     return dfs
+
+def convert_dataframes_to_json(data):
+    """Convert pandas DataFrames and other non-JSON-serializable objects to JSON-serializable format"""
+    if isinstance(data, dict):
+        return {key: convert_dataframes_to_json(value) for key, value in data.items()}
+    elif isinstance(data, list):
+        return [convert_dataframes_to_json(item) for item in data]
+    elif isinstance(data, pd.DataFrame):
+        # Convert DataFrame to list of dictionaries
+        return data.to_dict('records')
+    elif isinstance(data, pd.Series):
+        # Convert Series to dictionary
+        return data.to_dict()
+    elif isinstance(data, (datetime, pd.Timestamp)):
+        # Convert datetime objects to ISO format strings
+        return data.isoformat()
+    elif isinstance(data, (int, float, str, bool, type(None))):
+        # These are already JSON serializable
+        return data
+    else:
+        # For any other types, convert to string
+        try:
+            return str(data)
+        except:
+            return None
 
 @app.route('/')
 def index():
@@ -877,6 +1082,7 @@ def index():
         return render_template('index.html', data=trading_data)
     except Exception as e:
         # Log the error and return a user-friendly error page
+        logger.error(f"Error in main route: {e}")
         print(f"Error in main route: {e}")
         error_data = {
             'connection_status': {
@@ -895,7 +1101,8 @@ def index():
             'positions': pd.DataFrame(),
             'position_analytics': calculate_position_analytics(pd.DataFrame()),
             'put_analysis': calculate_put_annualized_returns(pd.DataFrame()),
-            'stock_concentration': calculate_stock_concentration_analysis([])
+            'stock_concentration': calculate_stock_concentration_analysis([]),
+            'itm_analysis': calculate_itm_analysis([])
         }
         return render_template('index.html', data=error_data)
 
@@ -916,6 +1123,7 @@ def api_reconnect():
             'retry_count': connection_status['retry_count']
         })
     except Exception as e:
+        logger.error(f"Error in reconnect endpoint: {e}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -925,12 +1133,23 @@ def api_reconnect():
 def api_refresh_data():
     """API endpoint to refresh all data"""
     try:
+        logger.info("Starting refresh-data request")
         trading_data = get_ibkr_data()
+        logger.info("Got trading data, converting to JSON-safe format")
+
+        # Convert DataFrames to JSON-serializable format
+        json_safe_data = convert_dataframes_to_json(trading_data)
+        logger.info("Successfully converted data to JSON-safe format")
+
         return jsonify({
             'success': True,
-            'data': trading_data
+            'data': json_safe_data
         })
     except Exception as e:
+        logger.error(f"Error in refresh-data endpoint: {e}")
+        logger.error(f"Error type: {type(e)}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({
             'success': False,
             'error': str(e)
@@ -961,6 +1180,7 @@ def api_debug_connection():
             }
         })
     except Exception as e:
+        logger.error(f"Error in debug-connection endpoint: {e}")
         return jsonify({
             'error': str(e)
         }), 500
@@ -974,9 +1194,11 @@ def api_tickle_control():
 
         if action == 'enable':
             connection_status['tickle_enabled'] = True
+            logger.info("Tickle enabled via API")
             return jsonify({'success': True, 'message': 'Tickle enabled'})
         elif action == 'disable':
             connection_status['tickle_enabled'] = False
+            logger.info("Tickle disabled via API")
             return jsonify({'success': True, 'message': 'Tickle disabled'})
         elif action == 'status':
             return jsonify({
@@ -989,8 +1211,11 @@ def api_tickle_control():
             return jsonify({'success': False, 'error': 'Invalid action'}), 400
 
     except Exception as e:
+        logger.error(f"Error in tickle-control endpoint: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
+    logger.info("Starting Flask application...")
+    print("Starting Flask application...")
     # Use 0.0.0.0 to make the server externally visible
     app.run(host='0.0.0.0', port=5000, debug=True)

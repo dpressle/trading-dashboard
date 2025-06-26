@@ -12,7 +12,8 @@ class Client:
         self.client.account_id = ACCOUNT_ID
 
     def get_portfolio_accounts(self):
-        self.client.portfolio_accounts()
+        results = self.client.portfolio_accounts().data
+        print(f"Portfolio accounts: {results}")
 
     def get_account_details(self):
         # Example: fetch account summary
@@ -67,6 +68,21 @@ class Client:
             print(f"Error fetching account balances: {e}")
             return None
 
+    def get_conid_by_symbol(self, symbol):
+        self.get_portfolio_accounts()
+        conid = self.client.stock_conid_by_symbol(symbol).data[symbol]
+        return conid
+
+    def get_live_marketdata_snapshot(self, conid, fields=['31', '84', '86']):
+        self.get_portfolio_accounts()
+        quote_result = self.client.live_marketdata_snapshot([conid], fields=fields).data
+        return quote_result
+
+    def get_marketdata_history_by_conids(self, conids):
+        self.get_portfolio_accounts()
+        history_result = self.client.marketdata_history_by_conids(conids).data
+        return history_result
+
 # Singleton instance
 ibkr_client = Client()
 
@@ -96,3 +112,43 @@ def fetch_ibkr_account_performance(period="MTD"):
 def fetch_ibkr_account_balances():
     """Fetch account balances and limits information"""
     return ibkr_client.get_account_balances()
+
+def fetch_stock_price(symbol):
+    """Fetch real-time stock price for a given symbol using latest ibind methods"""
+    try:
+        print(f"Fetching stock price for {symbol}...")
+        # Get the contract ID for the symbol
+        conid = ibkr_client.get_conid_by_symbol(symbol)
+        # print(f"Conid result: {conid}")
+        if not conid:
+            print(f"Symbol {symbol} not found in IBKR search")
+            return None
+        print(f"Found contract for {symbol} with conid: {conid}")
+        # Get live market data snapshot
+        quote_result = ibkr_client.get_live_marketdata_snapshot(str(conid))
+        print(f"Quote result: {quote_result}")
+        # quote_result = ibkr_client.get_marketdata_history_by_conids([conid])
+        print(f"Quote result: {quote_result}")
+        if not quote_result:
+            print(f"No market data available for {symbol}")
+            return None
+        quote = quote_result[0]
+        # Try to get the last price (field '31'), or fallback to bid/ask
+        current_price = quote.get('31')
+        if current_price is None:
+            current_price = quote.get('84')
+            if current_price is None:
+                current_price = quote.get('86')
+        print(f"Current price: {current_price}")
+        # Remove 'C' prefix if present in current_price - when market is closed for example
+        if current_price and current_price.startswith('C'):
+            print(f"Current price: {current_price}")
+            current_price = current_price[1:]
+        if current_price is not None:
+            print(f"Successfully fetched stock price for {symbol}: ${current_price}")
+        else:
+            print(f"Could not extract price from quote data for {symbol}")
+        return current_price
+    except Exception as e:
+        print(f"Error fetching stock price for {symbol}: {e}")
+        return None

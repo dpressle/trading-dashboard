@@ -35,6 +35,17 @@ A comprehensive web-based dashboard for Interactive Brokers (IBKR) trading data 
 - **Risk Level Classification**: High/Medium/Low risk categorization
 - **Implied Volatility Estimates**: Market volatility expectations
 - **Real-Time Risk Monitoring**: Live updates of risk metrics
+- **Real Stock Prices**: ⭐ NEW! Live stock prices from IBKR for accurate ITM detection and Greeks calculations
+
+### 🎯 **In-The-Money (ITM) Analysis** ⭐ NEW!
+- **Real-Time ITM Detection**: Uses live stock prices from IBKR to identify in-the-money put positions
+- **Assignment Risk Assessment**: Calculates potential assignment costs and risk levels
+- **Critical Alerts**: Immediate warnings for deep ITM positions near expiration
+- **Action Recommendations**: Specific guidance for managing ITM positions
+- **Risk Level Classification**: Critical, High, Medium, and Low risk categories
+- **Assignment Value Calculation**: Potential cost if put is assigned
+- **Distance from Strike**: How far stock price is below put strike
+- **Risk Management Strategies**: Detailed guidance for different risk levels
 
 ### 💻 **User Interface**
 - **Real-Time Updates**: Live data refresh with connection status monitoring
@@ -198,67 +209,60 @@ The dashboard connects directly to IBKR Gateway API endpoints:
 ##### Key Metrics
 - **Total Stocks**: Number of different stocks in your put portfolio
 - **Max Concentration**: Highest percentage allocated to any single stock
-- **Average Concentration**: Mean allocation percentage across all stocks
-- **High Risk Stocks**: Count of stocks with >25% concentration
+- **Average Concentration**: Mean allocation across all stocks
+- **High Concentration Count**: Number of stocks with >25% allocation
 
-##### Risk Management Recommendations
-- **Diversification**: Aim to keep no single stock above 20% of portfolio
-- **Concentration Limits**: Consider reducing positions in stocks >25% allocation
-- **Regular Monitoring**: Check concentration levels weekly or after new positions
-- **Balanced Approach**: Spread risk across multiple stocks and sectors
+#### Real Stock Price Integration ⭐ NEW!
 
-##### Using the Concentration Table
-- **Progress Bars**: Visual representation of allocation percentages
-- **Color Coding**: Red (high risk), Yellow (medium risk), Green (low risk)
-- **Stock Analytics**: Average returns, total P&L, and position counts per stock
-- **Risk Level Badges**: Quick identification of concentration risk levels
-- **Status Indicators**: "Over-Invested" vs "Balanced" status for each stock
+##### Accurate ITM Detection
+- **Live Market Data**: Real-time stock prices from IBKR market data feeds
+- **Precise ITM Calculation**: Accurate detection of in-the-money put positions
+- **Assignment Risk Assessment**: Realistic assignment probability based on actual stock prices
+- **Greeks Accuracy**: More precise option Greeks calculations using real underlying prices
 
-## �� Technical Details
+##### How It Works
+1. **Symbol Search**: IBKR API searches for stock symbols to get contract IDs
+2. **Market Data Snapshot**: Real-time price data fetched for each stock
+3. **Price Extraction**: Current price extracted from IBKR quote data
+4. **ITM Analysis**: Stock price compared to put strike for accurate ITM detection
+5. **Greeks Calculation**: Real stock price used in Black-Scholes calculations
 
-### Backend (Flask + IBKR API)
-- **IBKR Client**: Custom wrapper for IBKR Gateway API
-- **Connection Management**: Robust error handling and reconnection logic
-- **Data Processing**: Real-time position and performance analytics
-- **Background Workers**: Tickle worker for session maintenance
+##### Benefits
+- **Eliminates Estimation Errors**: No more rough estimates based on option premiums
+- **Real-Time Accuracy**: Live prices reflect current market conditions
+- **Better Risk Assessment**: More accurate assignment risk calculations
+- **Improved Greeks**: More precise delta, gamma, theta, and vega values
+- **Market-Aware Analysis**: ITM status reflects actual market conditions
 
-### 🔬 **Enhanced Risk Analytics Engine** ⭐ NEW!
-- **Black-Scholes Model**: Option pricing and Greeks calculations using scipy
-- **Greeks Calculations**:
-  - **Delta**: Position sensitivity to underlying price changes
-  - **Gamma**: Rate of delta change (acceleration risk)
-  - **Theta**: Daily time decay impact
-  - **Vega**: Volatility sensitivity
-- **Stress Testing Engine**: Monte Carlo-style scenario analysis
-- **Risk Classification**: Automated risk level assessment based on Greeks thresholds
-- **Implied Volatility Estimation**: Market volatility inference from option prices
-- **Probability Calculations**: Statistical profit/loss likelihood using normal distribution
+##### Fallback Handling
+- **Graceful Degradation**: If stock price unavailable, Greeks use default values
+- **Clear Indicators**: UI shows "N/A" when real prices not available
+- **Error Logging**: Detailed logging for troubleshooting price fetch issues
+- **Partial Analysis**: ITM analysis only shows positions with real price data
 
-### Frontend (Bootstrap 5)
-- **Responsive Design**: Mobile-first approach
-- **Real-Time Updates**: Live data refresh and status monitoring
-- **Interactive Controls**: Manual connection management
-- **Error Handling**: User-friendly error messages and troubleshooting
-- **Enhanced Risk Analytics UI**: ⭐ NEW!
-  - **Portfolio Risk Dashboard**: Aggregated Greeks and risk metrics
-  - **Advanced Risk Analysis Table**: Individual position Greeks with color-coded risk levels
-  - **Stress Testing Visualization**: Scenario-based P&L projections
-  - **Risk Level Badges**: Visual indicators for High/Medium/Low risk positions
-  - **Interactive DataTables**: Sortable and filterable risk metrics
-  - **Real-Time Risk Monitoring**: Live updates of portfolio risk exposure
+## 🔬 **Enhanced Risk Analytics** ⭐ NEW!
+- **Black-Scholes Greeks**: Delta, Gamma, Theta, and Vega calculations for all put positions
+- **Probability of Profit**: Statistical likelihood of profit using option pricing models
+- **Stress Testing Scenarios**: P&L projections under various market conditions:
+  - Stock price drops (10% and 20%)
+  - Volatility increases (50%)
+  - Time decay (1 week)
+  - Gamma risk from large moves
+- **Portfolio Risk Metrics**: Aggregated Greeks across all positions
+- **Risk Level Classification**: High/Medium/Low risk categorization
+- **Implied Volatility Estimates**: Market volatility expectations
+- **Real-Time Risk Monitoring**: Live updates of risk metrics
+- **Real Stock Prices**: ⭐ NEW! Live stock prices from IBKR for accurate ITM detection and Greeks calculations
 
-### Docker Architecture
-- **Flask Container**: Web application with network_mode: host
-- **IBKR Gateway Container**: IBKR Gateway service with network_mode: host
-- **Shared Network**: Both containers access localhost for direct communication
-
-### 📊 **Dependencies** ⭐ UPDATED!
-- **Flask**: Web framework for the dashboard
-- **Pandas**: Data manipulation and analysis
-- **IBIND**: IBKR API client library
-- **Scipy**: ⭐ NEW! Mathematical functions for Black-Scholes calculations and statistical distributions
-- **Bootstrap 5**: Frontend framework for responsive design
-- **DataTables**: Interactive table functionality for risk metrics
+### 🎯 **In-The-Money (ITM) Analysis** ⭐ NEW!
+- **Real-Time ITM Detection**: Uses live stock prices from IBKR to identify in-the-money put positions
+- **Assignment Risk Assessment**: Calculates potential assignment costs and risk levels
+- **Critical Alerts**: Immediate warnings for deep ITM positions near expiration
+- **Action Recommendations**: Specific guidance for managing ITM positions
+- **Risk Level Classification**: Critical, High, Medium, and Low risk categories
+- **Assignment Value Calculation**: Potential cost if put is assigned
+- **Distance from Strike**: How far stock price is below put strike
+- **Risk Management Strategies**: Detailed guidance for different risk levels
 
 ## 🔍 Troubleshooting
 

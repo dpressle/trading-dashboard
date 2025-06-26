@@ -486,13 +486,13 @@
                         <a class="nav-link" href="#performance"><i class="bi bi-graph-up-arrow"></i> Performance</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="#positions"><i class="bi bi-briefcase"></i> Positions</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="#analytics"><i class="bi bi-bar-chart"></i> Analytics</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#put-analysis"><i class="bi bi-graph-down"></i> Put Analysis</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#positions"><i class="bi bi-briefcase"></i> Positions</a>
                     </li>
                 </ul>
             </div>
@@ -770,6 +770,117 @@
             </div>
         </div>
         {% endif %}
+
+        <!-- Positions Section -->
+        <div id="positions" class="section">
+            <div class="section-header">
+                <h2 class="h4 mb-0"><i class="bi bi-briefcase"></i> Current Positions</h2>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" id="positionsTab" role="tablist">
+                {% if data.positions is defined %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button">
+                        <i class="bi bi-bar-chart"></i> Stocks
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="options-tab" data-bs-toggle="tab" data-bs-target="#options" type="button">
+                        <i class="bi bi-option"></i> Options
+                    </button>
+                </li>
+                {% endif %}
+            </ul>
+
+            <div class="tab-content" id="positionsTabContent">
+                <div class="tab-pane fade show active" id="stocks">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="stockPositionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Market Price</th>
+                                    <th>Market Value</th>
+                                    <th>Avg Cost</th>
+                                    <th>Unrealized P&L</th>
+                                    <th>Realized P&L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in data.positions.iterrows() %}
+                                {% if row['assetClass'] == 'STK' %}
+                                <tr>
+                                    <td><strong>{{ row['ticker'] }}</strong></td>
+                                    <td>{{ row['fullName'] }}</td>
+                                    <td>{{ row['position'] }}</td>
+                                    <td>${{ "%.2f"|format(row['mktPrice']) }}</td>
+                                    <td>${{ "%.2f"|format(row['mktValue']) }}</td>
+                                    <td>${{ "%.2f"|format(row['avgCost']) }}</td>
+                                    <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['unrealizedPnl']) }}
+                                    </td>
+                                    <td class="{{ 'positive' if row['realizedPnl'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['realizedPnl']) }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="options">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="optionPositionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>Description</th>
+                                    <th>Type</th>
+                                    <th>Expiration</th>
+                                    <th>Strike</th>
+                                    <th>Quantity</th>
+                                    <th>Market Price</th>
+                                    <th>Market Value</th>
+                                    <th>Avg Price</th>
+                                    <th>Avg Cost</th>
+                                    <th>Unrealized P&L</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for _, row in data.positions.iterrows() %}
+                                {% if row['assetClass'] == 'OPT' %}
+                                <tr>
+                                    <td><strong>{{ row['ticker'] }}</strong></td>
+                                    <td>{{ row['fullName'] }}</td>
+                                    <td>
+                                        <span
+                                            class="badge {% if row['putOrCall'] == 'P' %}bg-danger{% else %}bg-success{% endif %}">
+                                            {{ row['putOrCall'] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ row['expiry'] }}</td>
+                                    <td>${{ "%.2f"|format(row['strike']) }}</td>
+                                    <td>{{ row['position'] }}</td>
+                                    <td>${{ "%.2f"|format(row['mktPrice']) }}</td>
+                                    <td>${{ "%.2f"|format(row['mktValue']) }}</td>
+                                    <td>${{ "%.2f"|format(row['avgPrice']) }}</td>
+                                    <td>${{ "%.2f"|format(row['avgCost']) }}</td>
+                                    <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
+                                        ${{ "%.2f"|format(row['unrealizedPnl']) }}
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Position Analytics -->
         {% if data.position_analytics is defined %}
@@ -1422,6 +1533,209 @@
             </div>
             {% endif %}
 
+            <!-- ITM Analysis -->
+            {% if data.itm_analysis is defined and data.itm_analysis.itm_positions %}
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> In-The-Money (ITM) Risk Analysis
+                        <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top"
+                            title="Monitor put positions that are in-the-money and at risk of assignment. Take action to manage assignment risk."></i>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <!-- Note about real stock prices -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-info-circle"></i> Real-Time Stock Prices
+                        </h6>
+                        <p class="mb-0">
+                            ITM analysis uses real-time stock prices from IBKR market data for accurate detection.
+                            Only positions with available stock price data are shown in this analysis.
+                        </p>
+                    </div>
+
+                    <!-- ITM Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">ITM Positions</h5>
+                                <h4 class="text-danger">{{ data.itm_analysis.itm_summary.total_itm_positions }}</h4>
+                                <small class="text-muted">In-the-money puts</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">High Risk ITM</h5>
+                                <h4
+                                    class="{% if data.itm_analysis.high_risk_itm > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ data.itm_analysis.high_risk_itm }}
+                                </h4>
+                                <small class="text-muted">Critical/High risk</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">Assignment Risk</h5>
+                                <h4
+                                    class="{% if data.itm_analysis.assignment_risk > 1000 %}text-danger{% elif data.itm_analysis.assignment_risk > 500 %}text-warning{% else %}text-success{% endif %}">
+                                    ${{ "%.0f"|format(data.itm_analysis.assignment_risk) }}
+                                </h4>
+                                <small class="text-muted">Potential assignment cost</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-sm-6 mb-3">
+                            <div class="text-center">
+                                <h5 class="text-muted mb-1">Deep ITM</h5>
+                                <h4
+                                    class="{% if data.itm_analysis.itm_summary.deep_itm_positions > 0 %}text-danger{% else %}text-success{% endif %}">
+                                    {{ data.itm_analysis.itm_summary.deep_itm_positions }}
+                                </h4>
+                                <small class="text-muted">>$3 below strike</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Critical ITM Alerts -->
+                    {% set critical_itm = data.itm_analysis.itm_positions | selectattr('risk_level', 'equalto', 'Critical') | list
+                    %}
+                    {% if critical_itm %}
+                    <div class="alert alert-danger mb-4">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-exclamation-triangle-fill"></i> CRITICAL ITM ALERT
+                        </h6>
+                        <p class="mb-2">You have <strong>{{ critical_itm|length }}</strong> critical ITM position(s) requiring
+                            immediate action:</p>
+                        <div class="row">
+                            {% for position in critical_itm %}
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex justify-content-between align-items-center p-2 border border-danger rounded">
+                                    <div>
+                                        <strong class="text-danger">{{ position.symbol }}</strong> - ${{
+                                        "%.2f"|format(position.strike) }}
+                                        <br>
+                                        <small class="text-muted">
+                                            Stock: ${{ "%.2f"|format(position.current_stock_price) }} |
+                                            Distance: ${{ "%.2f"|format(position.distance_from_strike) }} |
+                                            {{ position.days_left }} days left
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="text-danger fw-bold">{{ position.action }}</div>
+                                        <small class="text-muted">Risk: ${{ "%.0f"|format(position.assignment_value) }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <hr>
+                        <p class="mb-0 small">
+                            <strong>IMMEDIATE ACTION REQUIRED:</strong> Close these positions or roll to further strikes/dates to
+                            avoid assignment.
+                        </p>
+                    </div>
+                    {% endif %}
+
+                    <!-- ITM Positions Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="itmAnalysisTable">
+                            <thead>
+                                <tr>
+                                    <th>Symbol</th>
+                                    <th>
+                                        Strike vs Stock
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                            title="Strike price vs current stock price. Red indicates ITM status."></i>
+                                    </th>
+                                    <th>Distance from Strike</th>
+                                    <th>Days Left</th>
+                                    <th>Assignment Value</th>
+                                    <th>Potential Loss</th>
+                                    <th>
+                                        Risk Level
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                            title="ITM risk: Critical (deep ITM + near expiry), High (moderate ITM + near expiry), Medium (ITM + some time), Low (slight ITM)"></i>
+                                    </th>
+                                    <th>Action Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for position in data.itm_analysis.itm_positions %}
+                                <tr
+                                    class="{% if position.risk_level == 'Critical' %}table-danger{% elif position.risk_level == 'High' %}table-warning{% endif %}">
+                                    <td><strong>{{ position.symbol }}</strong></td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="text-muted me-2">${{ "%.2f"|format(position.current_stock_price) }}</span>
+                                            <i class="bi bi-arrow-right text-danger"></i>
+                                            <span class="text-danger fw-bold ms-2">${{ "%.2f"|format(position.strike) }}</span>
+                                        </div>
+                                        <small class="text-danger">ITM by {{ "%.1f"|format(position.itm_percentage) }}%</small>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="{% if position.distance_from_strike > 5 %}text-danger{% elif position.distance_from_strike > 3 %}text-warning{% else %}text-info{% endif %} fw-bold">
+                                            ${{ "%.2f"|format(position.distance_from_strike) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if position.days_left <= 3 %}bg-danger{% elif position.days_left <= 7 %}bg-warning{% else %}bg-info{% endif %}">
+                                            {{ position.days_left }} days
+                                        </span>
+                                    </td>
+                                    <td class="text-danger fw-bold">${{ "%.0f"|format(position.assignment_value) }}</td>
+                                    <td class="{% if position.potential_loss > 0 %}text-danger{% else %}text-success{% endif %}">
+                                        ${{ "%.0f"|format(position.potential_loss) }}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if position.risk_level == 'Critical' %}bg-danger{% elif position.risk_level == 'High' %}bg-warning{% elif position.risk_level == 'Medium' %}bg-info{% else %}bg-success{% endif %}">
+                                            {{ position.risk_level }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge {% if position.action_urgency == 'critical' %}bg-danger{% elif position.action_urgency == 'high' %}bg-warning{% elif position.action_urgency == 'medium' %}bg-info{% else %}bg-secondary{% endif %}">
+                                            {{ position.action }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ITM Risk Management Tips -->
+                    <div class="alert alert-info mt-3">
+                        <h6 class="alert-heading">
+                            <i class="bi bi-lightbulb"></i> ITM Risk Management Strategies
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>For Critical/High Risk Positions:</strong>
+                                <ul class="mb-0">
+                                    <li>Close position immediately to avoid assignment</li>
+                                    <li>Roll to a lower strike price</li>
+                                    <li>Roll to a later expiration date</li>
+                                    <li>Consider buying back the put</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>For Medium/Low Risk Positions:</strong>
+                                <ul class="mb-0">
+                                    <li>Monitor stock price movement closely</li>
+                                    <li>Set stop-loss orders</li>
+                                    <li>Prepare rolling strategy</li>
+                                    <li>Consider partial position closure</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Enhanced Risk Analysis -->
             {% if data.put_analysis.put_positions and data.put_analysis.put_positions[0].greeks is defined %}
             <div class="card mt-4">
@@ -1469,9 +1783,9 @@
                                            title="Market's expectation of future volatility, inferred from option prices."></i>
                                     </th>
                                     <th>
-                                        Stock Price Est.
+                                        Stock Price
                                         <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
-                                           title="Estimated current stock price based on option pricing relationship."></i>
+                                           title="Real-time stock price from IBKR market data. Used for accurate ITM detection and Greeks calculations."></i>
                                     </th>
                                 </tr>
                             </thead>
@@ -1496,7 +1810,13 @@
                                         {{ "%.1f"|format(put.greeks.prob_profit * 100) }}%
                                     </td>
                                     <td>{{ "%.1f"|format(put.greeks.implied_vol * 100) }}%</td>
-                                    <td>${{ "%.2f"|format(put.current_stock_price) }}</td>
+                                    <td>
+                                        {% if put.current_stock_price is not none %}
+                                            ${{ "%.2f"|format(put.current_stock_price) }}
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
                                 </tr>
                                 {% endif %}
                                 {% endfor %}
@@ -1571,115 +1891,6 @@
         </div>
         {% endif %}
 
-        <!-- Positions Section -->
-        <div id="positions" class="section">
-            <div class="section-header">
-                <h2 class="h4 mb-0"><i class="bi bi-briefcase"></i> Current Positions</h2>
-            </div>
-
-            <ul class="nav nav-tabs mb-4" id="positionsTab" role="tablist">
-                {% if data.positions is defined %}
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="stocks-tab" data-bs-toggle="tab" data-bs-target="#stocks" type="button">
-                        <i class="bi bi-bar-chart"></i> Stocks
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="options-tab" data-bs-toggle="tab" data-bs-target="#options" type="button">
-                        <i class="bi bi-option"></i> Options
-                    </button>
-                </li>
-                {% endif %}
-            </ul>
-
-            <div class="tab-content" id="positionsTabContent">
-                <div class="tab-pane fade show active" id="stocks">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="stockPositionsTable">
-                            <thead>
-                                <tr>
-                                    <th>Symbol</th>
-                                    <th>Description</th>
-                                    <th>Quantity</th>
-                                    <th>Market Price</th>
-                                    <th>Market Value</th>
-                                    <th>Avg Cost</th>
-                                    <th>Unrealized P&L</th>
-                                    <th>Realized P&L</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for _, row in data.positions.iterrows() %}
-                                {% if row['assetClass'] == 'STK' %}
-                                <tr>
-                                    <td><strong>{{ row['ticker'] }}</strong></td>
-                                    <td>{{ row['fullName'] }}</td>
-                                    <td>{{ row['position'] }}</td>
-                                    <td>${{ "%.2f"|format(row['mktPrice']) }}</td>
-                                    <td>${{ "%.2f"|format(row['mktValue']) }}</td>
-                                    <td>${{ "%.2f"|format(row['avgCost']) }}</td>
-                                    <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['unrealizedPnl']) }}
-                                    </td>
-                                    <td class="{{ 'positive' if row['realizedPnl'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['realizedPnl']) }}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="tab-pane fade" id="options">
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="optionPositionsTable">
-                            <thead>
-                                <tr>
-                                    <th>Symbol</th>
-                                    <th>Description</th>
-                                    <th>Type</th>
-                                    <th>Expiration</th>
-                                    <th>Strike</th>
-                                    <th>Quantity</th>
-                                    <th>Market Price</th>
-                                    <th>Market Value</th>
-                                    <th>Avg Price</th>
-                                    <th>Avg Cost</th>
-                                    <th>Unrealized P&L</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for _, row in data.positions.iterrows() %}
-                                {% if row['assetClass'] == 'OPT' %}
-                                <tr>
-                                    <td><strong>{{ row['ticker'] }}</strong></td>
-                                    <td>{{ row['fullName'] }}</td>
-                                    <td>
-                                        <span class="badge {% if row['putOrCall'] == 'P' %}bg-danger{% else %}bg-success{% endif %}">
-                                            {{ row['putOrCall'] }}
-                                        </span>
-                                    </td>
-                                    <td>{{ row['expiry'] }}</td>
-                                    <td>${{ "%.2f"|format(row['strike']) }}</td>
-                                    <td>{{ row['position'] }}</td>
-                                    <td>${{ "%.2f"|format(row['mktPrice']) }}</td>
-                                    <td>${{ "%.2f"|format(row['mktValue']) }}</td>
-                                    <td>${{ "%.2f"|format(row['avgPrice']) }}</td>
-                                    <td>${{ "%.2f"|format(row['avgCost']) }}</td>
-                                    <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
-                                        ${{ "%.2f"|format(row['unrealizedPnl']) }}
-                                    </td>
-                                </tr>
-                                {% endif %}
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </div>
     {% endif %}
