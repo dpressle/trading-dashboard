@@ -12,6 +12,11 @@ A comprehensive web-based dashboard for Interactive Brokers (IBKR) trading data 
 
 ### 📈 **Advanced Trading Analytics**
 - **Position Analytics**: Comprehensive analysis of current positions including P&L, cost basis, and risk metrics
+  - **Collateral Usage Analysis**: ⭐ NEW! Real-time tracking of put option collateral as percentage of total account value
+  - **Account Value Integration**: Uses IBKR net liquidation value for accurate collateral percentage calculation
+  - **Visual Progress Indicators**: Color-coded progress bars showing collateral usage levels
+  - **Smart Risk Alerts**: Dynamic recommendations based on collateral usage thresholds
+  - **Available Capital Tracking**: Shows remaining capital not tied to collateral
 - **Put Analysis**: Specialized analysis for put options with annualized return calculations
 - **Performance Metrics**: Multi-period performance analysis (1D, 7D, MTD, YTD)
 - **Account Ledger**: Detailed cash balance and net liquidation value tracking
@@ -163,6 +168,43 @@ The dashboard connects directly to IBKR Gateway API endpoints:
   - **Risk Level Indicators**: High/Medium/Low risk classification
   - **Implied Volatility**: Market volatility expectations
 
+### 📊 **Collateral Usage Analysis** ⭐ NEW!
+
+#### Understanding Collateral Management
+The dashboard now provides comprehensive collateral usage analysis to help you manage your put option risk exposure effectively.
+
+#### Key Metrics Displayed
+- **Total Collateral**: Sum of all put option collateral requirements
+- **Total Account Value**: Your IBKR account's net liquidation value
+- **Collateral Percentage**: What percentage of your account is tied up as collateral
+- **Available Capital**: Remaining capital not committed to collateral
+
+#### Visual Risk Indicators
+- **Progress Bar**: Visual representation of collateral usage
+- **Color-Coded Alerts**:
+  - 🟢 **Green (< 30%)**: Healthy usage - room for additional positions
+  - 🟡 **Yellow (30-50%)**: Moderate usage - monitor closely
+  - 🔴 **Red (> 50%)**: High usage - consider reducing positions
+
+#### Smart Recommendations
+The system provides dynamic recommendations based on your collateral usage:
+- **Low Usage (< 30%)**: "Healthy collateral usage - Room for additional positions"
+- **Moderate Usage (30-50%)**: "Moderate collateral usage - Monitor closely"
+- **High Usage (> 50%)**: "High collateral usage - Consider reducing position sizes"
+
+#### Risk Management Benefits
+- **Prevent Over-Leveraging**: Avoid tying up too much capital in collateral
+- **Optimize Position Sizing**: Balance returns with risk exposure
+- **Real-Time Monitoring**: Track collateral usage as positions change
+- **Account Integration**: Uses actual IBKR account values for accuracy
+
+#### How It Works
+1. **Account Value**: Fetches net liquidation value from IBKR account ledger
+2. **Collateral Calculation**: Sums up all put option collateral from position analysis
+3. **Percentage Calculation**: Divides collateral by account value
+4. **Risk Assessment**: Applies thresholds to determine risk level
+5. **Visual Display**: Shows metrics with color-coded progress indicators
+
 ### 🔬 **Enhanced Risk Analytics Usage** ⭐ NEW!
 
 #### Understanding the Greeks
@@ -239,30 +281,6 @@ The dashboard connects directly to IBKR Gateway API endpoints:
 - **Clear Indicators**: UI shows "N/A" when real prices not available
 - **Error Logging**: Detailed logging for troubleshooting price fetch issues
 - **Partial Analysis**: ITM analysis only shows positions with real price data
-
-## 🔬 **Enhanced Risk Analytics** ⭐ NEW!
-- **Black-Scholes Greeks**: Delta, Gamma, Theta, and Vega calculations for all put positions
-- **Probability of Profit**: Statistical likelihood of profit using option pricing models
-- **Stress Testing Scenarios**: P&L projections under various market conditions:
-  - Stock price drops (10% and 20%)
-  - Volatility increases (50%)
-  - Time decay (1 week)
-  - Gamma risk from large moves
-- **Portfolio Risk Metrics**: Aggregated Greeks across all positions
-- **Risk Level Classification**: High/Medium/Low risk categorization
-- **Implied Volatility Estimates**: Market volatility expectations
-- **Real-Time Risk Monitoring**: Live updates of risk metrics
-- **Real Stock Prices**: ⭐ NEW! Live stock prices from IBKR for accurate ITM detection and Greeks calculations
-
-### 🎯 **In-The-Money (ITM) Analysis** ⭐ NEW!
-- **Real-Time ITM Detection**: Uses live stock prices from IBKR to identify in-the-money put positions
-- **Assignment Risk Assessment**: Calculates potential assignment costs and risk levels
-- **Critical Alerts**: Immediate warnings for deep ITM positions near expiration
-- **Action Recommendations**: Specific guidance for managing ITM positions
-- **Risk Level Classification**: Critical, High, Medium, and Low risk categories
-- **Assignment Value Calculation**: Potential cost if put is assigned
-- **Distance from Strike**: How far stock price is below put strike
-- **Risk Management Strategies**: Detailed guidance for different risk levels
 
 ## 🔍 Troubleshooting
 

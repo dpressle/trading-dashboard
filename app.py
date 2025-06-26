@@ -721,8 +721,8 @@ def calculate_itm_analysis(put_positions):
         'itm_summary': itm_summary
     }
 
-def calculate_position_analytics(positions_df):
-    """Calculate analytics for open positions including P&L, cost basis, etc."""
+def calculate_position_analytics(positions_df, total_account_value=0, put_collateral=0):
+    """Calculate analytics for open positions including P&L, cost basis, and collateral usage"""
     if positions_df.empty:
         return {
             'total_positions': 0,
@@ -738,6 +738,13 @@ def calculate_position_analytics(positions_df):
             'most_profitable': None,
             'least_profitable': None,
             'positions_by_type': {},
+            'collateral_usage': {
+                'total_collateral': put_collateral,
+                'total_account_value': total_account_value,
+                'collateral_percentage': (put_collateral / total_account_value * 100) if total_account_value > 0 else 0,
+                'available_capital': total_account_value - put_collateral,
+                'available_capital_percentage': ((total_account_value - put_collateral) / total_account_value * 100) if total_account_value > 0 else 0
+            },
             'risk_metrics': {
                 'largest_loss': 0,
                 'largest_gain': 0,
@@ -759,6 +766,13 @@ def calculate_position_analytics(positions_df):
         'most_profitable': None,
         'least_profitable': None,
         'positions_by_type': {},
+        'collateral_usage': {
+            'total_collateral': put_collateral,
+            'total_account_value': total_account_value,
+            'collateral_percentage': (put_collateral / total_account_value * 100) if total_account_value > 0 else 0,
+            'available_capital': total_account_value - put_collateral,
+            'available_capital_percentage': ((total_account_value - put_collateral) / total_account_value * 100) if total_account_value > 0 else 0
+        },
         'risk_metrics': {
             'largest_loss': 0,
             'largest_gain': 0,
@@ -936,7 +950,7 @@ def get_ibkr_data():
         }
         dfs['performance'] = {}
         dfs['positions'] = pd.DataFrame()
-        dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame())
+        dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame(), 0, 0)
         dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
         dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
         dfs['itm_analysis'] = calculate_itm_analysis([])
@@ -974,6 +988,7 @@ def get_ibkr_data():
         account_ledger = {}
 
     # Parse account ledger (if available)
+    total_account_value = 0
     if account_ledger:
         for currency, subledger in account_ledger.items():
             if currency not in ['USD']:
@@ -983,6 +998,8 @@ def get_ibkr_data():
                 'settled_balance': subledger.get('netliquidationvalue', 0),
                 'pending_balance': subledger.get('stockmarketvalue', 0)
             }
+            # Get total account value from net liquidation value
+            total_account_value = subledger.get('netliquidationvalue', 0)
 
     dfs['account_status'] = status_data
 
@@ -1025,11 +1042,14 @@ def get_ibkr_data():
 
         dfs['positions'] = df
 
-        # Calculate position analytics using original field names
-        dfs['position_analytics'] = calculate_position_analytics(df)
-
         # Calculate put annualized returns using original field names
         dfs['put_analysis'] = calculate_put_annualized_returns(df)
+
+        # Get total put collateral from put analysis
+        put_collateral = dfs['put_analysis'].get('total_collateral_tied', 0)
+
+        # Calculate position analytics using original field names with collateral info
+        dfs['position_analytics'] = calculate_position_analytics(df, total_account_value, put_collateral)
 
         # Calculate stock concentration analysis
         if dfs['put_analysis']['put_positions']:
@@ -1043,8 +1063,8 @@ def get_ibkr_data():
     else:
         # Return empty DataFrames and analytics when no positions
         dfs['positions'] = pd.DataFrame()
-        dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame())
         dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
+        dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame(), total_account_value, 0)
         dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
         dfs['itm_analysis'] = calculate_itm_analysis([])
 
@@ -1099,7 +1119,7 @@ def index():
             },
             'performance': {},
             'positions': pd.DataFrame(),
-            'position_analytics': calculate_position_analytics(pd.DataFrame()),
+            'position_analytics': calculate_position_analytics(pd.DataFrame(), 0, 0),
             'put_analysis': calculate_put_annualized_returns(pd.DataFrame()),
             'stock_concentration': calculate_stock_concentration_analysis([]),
             'itm_analysis': calculate_itm_analysis([])

@@ -948,6 +948,77 @@
                 </div>
             </div>
 
+            <!-- Collateral Usage -->
+            {% if data.position_analytics.collateral_usage is defined %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-shield-lock"></i> Collateral Usage</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3 col-sm-6 mb-3">
+                                    <div class="text-center">
+                                        <div class="h4 mb-1 text-primary">${{ "%.2f"|format(data.position_analytics.collateral_usage.total_collateral) }}</div>
+                                        <small class="text-muted">Total Collateral</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-3">
+                                    <div class="text-center">
+                                        <div class="h4 mb-1 text-info">${{ "%.2f"|format(data.position_analytics.collateral_usage.total_account_value) }}</div>
+                                        <small class="text-muted">Total Account Value</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-3">
+                                    <div class="text-center">
+                                        <div class="h4 mb-1 {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}text-danger{% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}text-warning{% else %}text-success{% endif %}">
+                                            {{ "%.1f"|format(data.position_analytics.collateral_usage.collateral_percentage) }}%
+                                        </div>
+                                        <small class="text-muted">Collateral %</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 col-sm-6 mb-3">
+                                    <div class="text-center">
+                                        <div class="h4 mb-1 text-success">${{ "%.2f"|format(data.position_analytics.collateral_usage.available_capital) }}</div>
+                                        <small class="text-muted">Available Capital</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <small>Collateral Usage</small>
+                                    <small>{{ "%.1f"|format(data.position_analytics.collateral_usage.collateral_percentage) }}%</small>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}bg-danger{% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}bg-warning{% else %}bg-success{% endif %}"
+                                         role="progressbar"
+                                         style="width: {{ data.position_analytics.collateral_usage.collateral_percentage }}%"
+                                         aria-valuenow="{{ data.position_analytics.collateral_usage.collateral_percentage }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}
+                                            ⚠️ High collateral usage - Consider reducing position sizes
+                                        {% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}
+                                            ⚡ Moderate collateral usage - Monitor closely
+                                        {% else %}
+                                            ✅ Healthy collateral usage - Room for additional positions
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Position Breakdown -->
             <div class="row mb-4">
                 <div class="col-md-6 mb-3">
