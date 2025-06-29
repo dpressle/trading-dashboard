@@ -73,7 +73,7 @@ class Client:
         conid = self.client.stock_conid_by_symbol(symbol).data[symbol]
         return conid
 
-    def get_live_marketdata_snapshot(self, conid, fields=['31', '84', '86']):
+    def get_live_marketdata_snapshot(self, conid, fields=[]):
         self.get_portfolio_accounts()
         quote_result = self.client.live_marketdata_snapshot([conid], fields=fields).data
         return quote_result
@@ -114,35 +114,32 @@ def fetch_ibkr_account_balances():
     return ibkr_client.get_account_balances()
 
 def fetch_stock_price(symbol):
-    """Fetch real-time stock price for a given symbol using latest ibind methods"""
+    """Fetch real-time stock price for a given symbol using available ibind methods"""
     try:
         print(f"Fetching stock price for {symbol}...")
-        # Get the contract ID for the symbol
-        conid = ibkr_client.get_conid_by_symbol(symbol)
-        # print(f"Conid result: {conid}")
-        if not conid:
+        # Make session to ensure proper session state
+        ibkr_client.client.make_session()
+        # Use stock_conid_by_symbol to get the contract ID
+        conid_result = ibkr_client.client.stock_conid_by_symbol(symbol)
+        if not conid_result.data or symbol not in conid_result.data:
             print(f"Symbol {symbol} not found in IBKR search")
             return None
+        conid = str(conid_result.data[symbol])
         print(f"Found contract for {symbol} with conid: {conid}")
-        # Get live market data snapshot
-        quote_result = ibkr_client.get_live_marketdata_snapshot(str(conid))
-        print(f"Quote result: {quote_result}")
-        # quote_result = ibkr_client.get_marketdata_history_by_conids([conid])
-        print(f"Quote result: {quote_result}")
-        if not quote_result:
+        # Try simpler field codes - just last price
+        fields = "31"  # Last price only
+        quote_result = ibkr_client.client.live_marketdata_snapshot([conid], fields=fields)
+        print(f"Quote result: {quote_result.data}")
+        if not quote_result.data:
             print(f"No market data available for {symbol}")
             return None
-        quote = quote_result[0]
-        # Try to get the last price (field '31'), or fallback to bid/ask
+        quote = quote_result.data[0]
+        # Try to get the last price (field '31')
         current_price = quote.get('31')
-        if current_price is None:
-            current_price = quote.get('84')
-            if current_price is None:
-                current_price = quote.get('86')
         print(f"Current price: {current_price}")
         # Remove 'C' prefix if present in current_price - when market is closed for example
-        if current_price and current_price.startswith('C'):
-            print(f"Current price: {current_price}")
+        if current_price and isinstance(current_price, str) and current_price.startswith('C'):
+            print(f"Removing 'C' prefix from price: {current_price}")
             current_price = current_price[1:]
         if current_price is not None:
             print(f"Successfully fetched stock price for {symbol}: ${current_price}")

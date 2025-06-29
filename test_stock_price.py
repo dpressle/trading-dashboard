@@ -7,7 +7,7 @@ from ibkr_client import fetch_stock_price
 
 def test_stock_prices():
     """Test fetching stock prices for common symbols"""
-    test_symbols = ['SOFI']
+    test_symbols = ['HIMS']
 
     print("Testing stock price fetching...")
     print("=" * 50)
