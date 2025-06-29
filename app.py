@@ -443,7 +443,7 @@ def calculate_put_annualized_returns(positions_df):
                 'premium': premium_per_contract,
                 'mkt_value': mkt_value_per_contract,  # Per contract
                 'current_pnl': unrealized_pnl_per_contract,
-                'expiration': exp_date.strftime('%Y-%m-%d'),
+                'expiration': exp_date.strftime('%b %d, %Y'),
                 'days_left': days_left,
                 'collateral': collateral_per_contract,
                 'annualized_return': annualized_return,
@@ -879,7 +879,11 @@ def parse_performance_data(performance_data):
         nav_data = performance_data.get('nav', {}).get('data', [])
         if nav_data:
             nav_info = nav_data[0]
-            current_nav = nav_info.get('navs', [0])[0] if nav_info.get('navs') else 0
+            navs_array = nav_info.get('navs', [])
+            if navs_array:
+                current_nav = navs_array[-1]  # Use the last (most recent) NAV value
+            else:
+                current_nav = 0
             start_nav = nav_info.get('startNAV', {}).get('val', 0)
             nav_change = current_nav - start_nav
             nav_change_pct = (nav_change / start_nav * 100) if start_nav != 0 else 0
@@ -889,7 +893,11 @@ def parse_performance_data(performance_data):
         # Extract returns data
         returns_data = performance_data.get('cps', {}).get('data', [])
         if returns_data:
-            returns = returns_data[0].get('returns', [0])[0] if returns_data[0].get('returns') else 0
+            returns_array = returns_data[0].get('returns', [])
+            if returns_array:
+                returns = returns_array[-1]  # Use the last (most recent) returns value
+            else:
+                returns = 0
             returns_pct = returns * 100
         else:
             returns = returns_pct = 0
@@ -1040,10 +1048,26 @@ def get_ibkr_data():
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
-        dfs['positions'] = df
-
-        # Calculate put annualized returns using original field names
+        # Calculate put annualized returns using original field names (before date formatting)
         dfs['put_analysis'] = calculate_put_annualized_returns(df)
+
+        # Format expiration dates from YYYYMMDD to MMM DD, YYYY (after put analysis)
+        if 'expiry' in df.columns:
+            def format_expiry_date(expiry_str):
+                try:
+                    if pd.isna(expiry_str) or expiry_str == '':
+                        return ''
+                    if len(str(expiry_str)) == 8:  # YYYYMMDD format
+                        exp_date = datetime.strptime(str(expiry_str), '%Y%m%d')
+                        return exp_date.strftime('%b %d, %Y')
+                    else:
+                        return str(expiry_str)
+                except:
+                    return str(expiry_str)
+
+            df['expiry'] = df['expiry'].apply(format_expiry_date)
+
+        dfs['positions'] = df
 
         # Get total put collateral from put analysis
         put_collateral = dfs['put_analysis'].get('total_collateral_tied', 0)
