@@ -3,8 +3,8 @@ import pandas as pd
 from ibind import IbkrClient
 
 IBKR_GATEWAY_URL = os.environ.get('IBKR_GATEWAY_URL', 'localhost')
-ACCOUNT_ID = os.getenv('IBIND_ACCOUNT_ID', 'No account id provided')
-PORT = os.getenv('IBIND_PORT', '5001')
+ACCOUNT_ID = os.getenv('IBKR_ACCOUNT_ID', 'No account id provided')
+PORT = os.getenv('IBKR_GATEWAY_PORT', '5001')
 
 class Client:
     def __init__(self):

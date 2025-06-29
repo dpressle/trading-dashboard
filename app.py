@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 # IBKR Gateway configuration
 IBKR_GATEWAY_URL = os.environ.get('IBKR_GATEWAY_URL', 'localhost')
-IBKR_GATEWAY_PORT = os.environ.get('IBIND_PORT', '5001')
+IBKR_GATEWAY_PORT = os.environ.get('IBKR_GATEWAY_PORT', '5001')
 IBKR_GATEWAY_LOGIN_URL = f"https://{IBKR_GATEWAY_URL}:{IBKR_GATEWAY_PORT}"
 
 # Initialize connection status
@@ -1195,8 +1195,8 @@ def api_debug_connection():
             'tickle_result': tickle_result,
             'environment': {
                 'IBKR_GATEWAY_URL': os.environ.get('IBKR_GATEWAY_URL', 'Not set'),
-                'IBIND_PORT': os.environ.get('IBIND_PORT', 'Not set'),
-                'IBIND_ACCOUNT_ID': os.environ.get('IBIND_ACCOUNT_ID', 'Not set')
+                'IBKR_GATEWAY_PORT': os.environ.get('IBKR_GATEWAY_PORT', 'Not set'),
+                'IBKR_ACCOUNT_ID': os.environ.get('IBKR_ACCOUNT_ID', 'Not set')
             }
         })
     except Exception as e:
