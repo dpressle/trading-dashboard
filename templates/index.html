@@ -1328,7 +1328,7 @@
                                     <td>${{ "%.2f"|format(put.strike) }}</td>
                                     <td>{{ put.expiration }}</td>
                                     <td>
-                                        <span class="badge {% if put.days_left <= 7 %}bg-danger{% elif put.days_left <= 14 %}bg-warning{% else %}bg-info{% endif %}">
+                                        <span class="badge {% if put.days_left is not none and put.days_left >= 0 and put.days_left <= 7 %}bg-danger{% elif put.days_left is not none and put.days_left >= 0 and put.days_left <= 14 %}bg-warning{% else %}bg-info{% endif %}">
                                             {{ put.days_left }} days
                                         </span>
                                     </td>
@@ -1751,7 +1751,7 @@
                                     </td>
                                     <td>
                                         <span
-                                            class="badge {% if position.days_left <= 3 %}bg-danger{% elif position.days_left <= 7 %}bg-warning{% else %}bg-info{% endif %}">
+                                            class="badge {% if position.days_left is not none and position.days_left >= 0 and position.days_left <= 3 %}bg-danger{% elif position.days_left is not none and position.days_left >= 0 and position.days_left <= 7 %}bg-warning{% else %}bg-info{% endif %}">
                                             {{ position.days_left }} days
                                         </span>
                                     </td>
@@ -1988,18 +1988,6 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            // Handle file selection change
-            $('#dataFileSelect').on('change', function() {
-                const selectedFile = $(this).val();
-                if (selectedFile) {
-                    // Show loading indicator
-                    $('#loadingIndicator').show();
-
-                    // Redirect to the same page with the selected file
-                    window.location.href = window.location.pathname + '?data_file=' + encodeURIComponent(selectedFile);
-                }
-            });
-
             // Smooth scrolling for navigation
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
@@ -2076,134 +2064,6 @@
                 });
             });
 
-            // Date Range Selector functionality
-            const startDateInput = document.getElementById('startDate');
-            const endDateInput = document.getElementById('endDate');
-            const applyDateRangeBtn = document.getElementById('applyDateRange');
-            const clearDateFilterBtn = document.getElementById('clearDateFilter');
-            const dateRangeInfo = document.getElementById('dateRangeInfo');
-            const presetButtons = document.querySelectorAll('.preset-btn[data-days]');
-
-            // Set default date range to show all data
-            const today = new Date();
-            const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-
-            // Set max date to today
-            startDateInput.max = today.toISOString().split('T')[0];
-            endDateInput.max = today.toISOString().split('T')[0];
-
-            // Function to update date range info
-            function updateDateRangeInfo(startDate, endDate) {
-                if (startDate && endDate) {
-                    dateRangeInfo.textContent = `Showing data from ${startDate} to ${endDate}`;
-                } else {
-                    dateRangeInfo.textContent = 'Showing all transactions';
-                }
-            }
-
-            // Function to format date for display
-            function formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
-
-            // Handle preset button clicks
-            presetButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const days = parseInt(this.getAttribute('data-days'));
-                    const endDate = new Date();
-                    const startDate = new Date();
-                    startDate.setDate(endDate.getDate() - days);
-
-                    startDateInput.value = startDate.toISOString().split('T')[0];
-                    endDateInput.value = endDate.toISOString().split('T')[0];
-
-                    // Remove active class from all preset buttons
-                    presetButtons.forEach(btn => btn.classList.remove('active'));
-                    // Add active class to clicked button
-                    this.classList.add('active');
-
-                    // Apply the filter
-                    applyDateFilter();
-                });
-            });
-
-            // Handle apply date range button click
-            applyDateRangeBtn.addEventListener('click', function() {
-                applyDateFilter();
-            });
-
-            // Handle clear filter button click
-            clearDateFilterBtn.addEventListener('click', function() {
-                startDateInput.value = '';
-                endDateInput.value = '';
-                presetButtons.forEach(btn => btn.classList.remove('active'));
-
-                // Reload page without date parameters
-                const urlParams = new URLSearchParams(window.location.search);
-                urlParams.delete('start_date');
-                urlParams.delete('end_date');
-
-                const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
-                window.location.href = newUrl;
-            });
-
-            // Function to apply date filter
-            function applyDateFilter() {
-                const startDate = startDateInput.value;
-                const endDate = endDateInput.value;
-
-                if (startDate && endDate && startDate > endDate) {
-                    alert('Start date cannot be later than end date');
-                    return;
-                }
-
-                // Show loading indicator
-                $('#loadingIndicator').show();
-
-                // Build URL with date parameters
-                const urlParams = new URLSearchParams(window.location.search);
-
-                if (startDate) {
-                    urlParams.set('start_date', startDate);
-                } else {
-                    urlParams.delete('start_date');
-                }
-
-                if (endDate) {
-                    urlParams.set('end_date', endDate);
-                } else {
-                    urlParams.delete('end_date');
-                }
-
-                // Redirect with new parameters
-                const newUrl = window.location.pathname + '?' + urlParams.toString();
-                window.location.href = newUrl;
-            }
-
-            // Initialize date range display from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const urlStartDate = urlParams.get('start_date');
-            const urlEndDate = urlParams.get('end_date');
-
-            if (urlStartDate) {
-                startDateInput.value = urlStartDate;
-            }
-            if (urlEndDate) {
-                endDateInput.value = urlEndDate;
-            }
-
-            if (urlStartDate || urlEndDate) {
-                updateDateRangeInfo(
-                    urlStartDate ? formatDate(urlStartDate) : 'Beginning',
-                    urlEndDate ? formatDate(urlEndDate) : 'Now'
-                );
-            }
-
             // Start connection monitoring
             startConnectionMonitoring();
         });
@@ -2246,6 +2106,11 @@
             refreshBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Refreshing...';
             refreshBtn.disabled = true;
 
+            // Track refresh operation
+            if (window.trackRefresh) {
+                window.trackRefresh();
+            }
+
             fetch('/api/refresh-data')
                 .then(response => response.json())
                 .then(data => {
@@ -2268,8 +2133,18 @@
         }
 
         function startConnectionMonitoring() {
+            let lastRefreshTime = 0;
+            const REFRESH_COOLDOWN = 10000; // 10 seconds cooldown after refresh
+
             // Check connection status every 30 seconds
             setInterval(() => {
+                // Don't check connection status if we just refreshed
+                const timeSinceRefresh = Date.now() - lastRefreshTime;
+                if (timeSinceRefresh < REFRESH_COOLDOWN) {
+                    console.log('Skipping connection check - too soon after refresh');
+                    return;
+                }
+
                 fetch('/api/connection-status')
                     .then(response => response.json())
                     .then(data => {
@@ -2279,13 +2154,183 @@
                         console.error('Error checking connection status:', error);
                     });
             }, 30000);
+
+            // Track refresh operations
+            window.trackRefresh = function() {
+                lastRefreshTime = Date.now();
+            };
         }
+
+        // Auto-refresh functionality
+        function startAutoRefresh() {
+            const REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+            let nextRefreshTime = Date.now() + REFRESH_INTERVAL;
+            let autoRefreshEnabled = true;
+            let isRefreshing = false;
+
+            // Create refresh indicator
+            const refreshIndicator = document.createElement('div');
+            refreshIndicator.id = 'autoRefreshIndicator';
+            refreshIndicator.className = 'position-fixed';
+            refreshIndicator.style.cssText = `
+                bottom: 20px;
+                left: 20px;
+                background: rgba(0, 123, 255, 0.9);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                z-index: 1000;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+            `;
+
+            function updateRefreshIndicator() {
+                if (!autoRefreshEnabled) {
+                    refreshIndicator.innerHTML = `
+                        <i class="bi bi-pause-circle"></i>
+                        <span>Auto-refresh paused</span>
+                    `;
+                    refreshIndicator.style.background = 'rgba(108, 117, 125, 0.9)';
+                    return;
+                }
+
+                if (isRefreshing) {
+                    refreshIndicator.innerHTML = `
+                        <i class="bi bi-arrow-clockwise spin"></i>
+                        <span>Refreshing...</span>
+                    `;
+                    refreshIndicator.style.background = 'rgba(255, 193, 7, 0.9)';
+                    return;
+                }
+
+                const timeLeft = Math.max(0, nextRefreshTime - Date.now());
+                const minutes = Math.floor(timeLeft / 60000);
+                const seconds = Math.floor((timeLeft % 60000) / 1000);
+
+                refreshIndicator.innerHTML = `
+                    <i class="bi bi-clock"></i>
+                    <span>Auto-refresh in ${minutes}:${seconds.toString().padStart(2, '0')}</span>
+                `;
+                refreshIndicator.style.background = 'rgba(0, 123, 255, 0.9)';
+            }
+
+            // Add click handler to toggle auto-refresh
+            refreshIndicator.addEventListener('click', function() {
+                if (isRefreshing) return; // Prevent clicking during refresh
+
+                autoRefreshEnabled = !autoRefreshEnabled;
+                if (autoRefreshEnabled) {
+                    showNotification('Auto-refresh enabled', 'success');
+                    nextRefreshTime = Date.now() + REFRESH_INTERVAL;
+                } else {
+                    showNotification('Auto-refresh paused', 'warning');
+                }
+                updateRefreshIndicator();
+            });
+
+            // Add indicator to page
+            document.body.appendChild(refreshIndicator);
+
+            // Update indicator every second
+            const indicatorInterval = setInterval(updateRefreshIndicator, 1000);
+
+            // Auto-refresh function
+            function performAutoRefresh() {
+                if (!autoRefreshEnabled || isRefreshing) return;
+
+                isRefreshing = true;
+                console.log('Performing auto-refresh...');
+
+                // Show notification
+                showNotification('Auto-refreshing data...', 'info');
+
+                // Track refresh operation
+                if (window.trackRefresh) {
+                    window.trackRefresh();
+                }
+
+                // Temporarily hide connection banner during refresh
+                const banner = document.getElementById('connectionBanner');
+                if (banner) {
+                    banner.style.opacity = '0.5';
+                }
+
+                // Perform refresh
+                fetch('/api/refresh-data')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showNotification('Data auto-refreshed successfully!', 'success');
+
+                            // Delay the page reload to allow user to see success message
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        } else {
+                            showNotification('Auto-refresh failed: ' + (data.error || 'Unknown error'), 'error');
+                            isRefreshing = false;
+
+                            // Restore connection banner
+                            if (banner) {
+                                banner.style.opacity = '1';
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        showNotification('Auto-refresh failed: ' + error.message, 'error');
+                        isRefreshing = false;
+
+                        // Restore connection banner
+                        if (banner) {
+                            banner.style.opacity = '1';
+                        }
+                    });
+
+                // Schedule next refresh
+                nextRefreshTime = Date.now() + REFRESH_INTERVAL;
+            }
+
+            // Set up auto-refresh interval
+            const refreshInterval = setInterval(performAutoRefresh, REFRESH_INTERVAL);
+
+            // Initial update
+            updateRefreshIndicator();
+
+            // Cleanup function (can be called if needed)
+            window.stopAutoRefresh = function() {
+                clearInterval(refreshInterval);
+                clearInterval(indicatorInterval);
+                if (refreshIndicator.parentNode) {
+                    refreshIndicator.remove();
+                }
+            };
+        }
+
+        // Start auto-refresh when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            startAutoRefresh();
+        });
 
         function updateConnectionBanner(status) {
             const banner = document.getElementById('connectionBanner');
             if (!banner) return;
 
             const isConnected = status.connected;
+
+            // Don't show red banner if we're currently refreshing
+            const refreshIndicator = document.getElementById('autoRefreshIndicator');
+            const isCurrentlyRefreshing = refreshIndicator &&
+                refreshIndicator.innerHTML.includes('Refreshing...');
+
+            if (!isConnected && isCurrentlyRefreshing) {
+                console.log('Skipping red banner update - currently refreshing');
+                return;
+            }
+
             const alertClass = isConnected ? 'alert-success' : 'alert-danger';
             const iconClass = isConnected ? 'bi-wifi' : 'bi-wifi-off';
 

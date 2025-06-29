@@ -637,6 +637,12 @@ def calculate_itm_analysis(put_positions):
         if current_stock_price is None:
             continue
 
+        # Ensure days_left is a valid number
+        try:
+            days_left = int(days_left) if days_left is not None else 0
+        except (ValueError, TypeError):
+            days_left = 0
+
         # Calculate ITM status
         if current_stock_price < strike:
             # Position is ITM
@@ -1097,15 +1103,26 @@ def get_ibkr_data():
 def convert_dataframes_to_json(data):
     """Convert pandas DataFrames and other non-JSON-serializable objects to JSON-serializable format"""
     if isinstance(data, dict):
-        return {key: convert_dataframes_to_json(value) for key, value in data.items()}
+        # Handle dictionary with potential None keys or mixed types
+        result = {}
+        for key, value in data.items():
+            # Convert None keys to string
+            safe_key = str(key) if key is not None else "null"
+            result[safe_key] = convert_dataframes_to_json(value)
+        return result
     elif isinstance(data, list):
         return [convert_dataframes_to_json(item) for item in data]
     elif isinstance(data, pd.DataFrame):
         # Convert DataFrame to list of dictionaries
         return data.to_dict('records')
     elif isinstance(data, pd.Series):
-        # Convert Series to dictionary
-        return data.to_dict()
+        # Convert Series to dictionary, handling None keys
+        series_dict = data.to_dict()
+        result = {}
+        for key, value in series_dict.items():
+            safe_key = str(key) if key is not None else "null"
+            result[safe_key] = convert_dataframes_to_json(value)
+        return result
     elif isinstance(data, (datetime, pd.Timestamp)):
         # Convert datetime objects to ISO format strings
         return data.isoformat()
@@ -1153,6 +1170,34 @@ def index():
 @app.route('/api/connection-status')
 def api_connection_status():
     """API endpoint to check connection status"""
+    # Add a grace period - if we recently had a successful connection,
+    # don't immediately show as disconnected during temporary issues
+    current_time = datetime.now()
+    last_check = connection_status.get('last_check')
+
+    if last_check and isinstance(last_check, datetime):
+        time_since_last_check = (current_time - last_check).total_seconds()
+
+        # If we had a successful connection within the last 2 minutes,
+        # and current status is disconnected, check if it's a temporary issue
+        if (connection_status.get('connected') == False and
+            time_since_last_check < 120 and  # 2 minutes grace period
+            connection_status.get('retry_count', 0) < 3):  # Only if we haven't had many retries
+
+            # Try a quick connection check
+            try:
+                # Quick check without updating the main status
+                account_details = fetch_ibkr_account_details()
+                if account_details:
+                    # Connection is actually fine, update status
+                    connection_status['connected'] = True
+                    connection_status['error_message'] = None
+                    connection_status['retry_count'] = 0
+                    connection_status['last_check'] = current_time
+            except:
+                # If quick check fails, keep the current status
+                pass
+
     return jsonify(connection_status)
 
 @app.route('/api/reconnect')
