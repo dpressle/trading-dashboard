@@ -6,7 +6,7 @@ import time
 import logging
 import sys
 from datetime import datetime, timedelta
-from ibkr_client import fetch_ibkr_account_details, fetch_ibkr_positions, fetch_ibkr_tickle, fetch_ibkr_account_performance, fetch_ibkr_account_ledger, fetch_stock_price
+from ibkr_client import fetch_ibkr_account_details, fetch_ibkr_positions, fetch_ibkr_tickle, fetch_ibkr_account_performance, fetch_ibkr_account_ledger, fetch_stock_price, fetch_vix_price
 import math
 from scipy.stats import norm
 
@@ -1043,6 +1043,21 @@ def get_ibkr_data():
         print(f"Error fetching positions: {error}")
         positions = []
 
+    # Fetch VIX price for allocation recommendations
+    vix_price = None
+    try:
+        from ibkr_client import fetch_vix_price
+        vix_price, error = safe_ibkr_call(fetch_vix_price)
+        if error:
+            logger.error(f"Error fetching VIX price: {error}")
+            print(f"Error fetching VIX price: {error}")
+        else:
+            logger.info(f"Successfully fetched VIX price: {vix_price}")
+            print(f"Successfully fetched VIX price: {vix_price}")
+    except Exception as e:
+        logger.error(f"Error importing or fetching VIX price: {e}")
+        print(f"Error importing or fetching VIX price: {e}")
+
     if positions and len(positions) > 0:  # Check if list is not empty
         # Keep all original IBKR fields - no field renaming
         df = pd.DataFrame(positions)
@@ -1081,6 +1096,15 @@ def get_ibkr_data():
         # Calculate position analytics using original field names with collateral info
         dfs['position_analytics'] = calculate_position_analytics(df, total_account_value, put_collateral)
 
+        # Calculate VIX-based allocation recommendations if VIX price is available
+        if vix_price is not None:
+            current_collateral_percentage = dfs['position_analytics']['collateral_usage']['collateral_percentage']
+            vix_allocation = calculate_vix_based_allocation(vix_price, current_collateral_percentage, total_account_value)
+            if vix_allocation:
+                dfs['position_analytics']['vix_allocation'] = vix_allocation
+                logger.info(f"VIX-based allocation calculated: {vix_allocation['recommendation_text']}")
+                print(f"VIX-based allocation calculated: {vix_allocation['recommendation_text']}")
+
         # Calculate stock concentration analysis
         if dfs['put_analysis']['put_positions']:
             dfs['stock_concentration'] = calculate_stock_concentration_analysis(dfs['put_analysis']['put_positions'])
@@ -1095,6 +1119,15 @@ def get_ibkr_data():
         dfs['positions'] = pd.DataFrame()
         dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
         dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame(), total_account_value, 0)
+
+        # Calculate VIX-based allocation recommendations even with no positions
+        if vix_price is not None:
+            vix_allocation = calculate_vix_based_allocation(vix_price, 0, total_account_value)
+            if vix_allocation:
+                dfs['position_analytics']['vix_allocation'] = vix_allocation
+                logger.info(f"VIX-based allocation calculated (no positions): {vix_allocation['recommendation_text']}")
+                print(f"VIX-based allocation calculated (no positions): {vix_allocation['recommendation_text']}")
+
         dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
         dfs['itm_analysis'] = calculate_itm_analysis([])
 
@@ -1302,6 +1335,90 @@ def api_tickle_control():
     except Exception as e:
         logger.error(f"Error in tickle-control endpoint: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+def calculate_vix_based_allocation(vix_price, current_collateral_percentage, total_account_value):
+    """Calculate VIX-based allocation recommendations for optimal cash allocation"""
+    try:
+        vix_float = float(vix_price) if isinstance(vix_price, str) else vix_price
+
+        # VIX-based allocation levels
+        allocation_ranges = {
+            'low_volatility': {'min': 10, 'max': 12, 'min_allocation': 20, 'max_allocation': 20, 'color': 'success'},
+            'moderate_volatility': {'min': 12, 'max': 15, 'min_allocation': 20, 'max_allocation': 60, 'color': 'info'},
+            'high_volatility': {'min': 15, 'max': 20, 'min_allocation': 60, 'max_allocation': 80, 'color': 'warning'},
+            'extreme_volatility': {'min': 20, 'max': 30, 'min_allocation': 80, 'max_allocation': 100, 'color': 'danger'}
+        }
+
+        # Determine current VIX level
+        current_level = None
+        for level, range_info in allocation_ranges.items():
+            if range_info['min'] <= vix_float <= range_info['max']:
+                current_level = level
+                break
+
+        if not current_level:
+            # Handle VIX outside normal ranges
+            if vix_float < 10:
+                current_level = 'low_volatility'
+            elif vix_float > 30:
+                current_level = 'extreme_volatility'
+
+        range_info = allocation_ranges[current_level]
+
+        # Calculate recommended allocation
+        min_recommended = range_info['min_allocation']
+        max_recommended = range_info['max_allocation']
+
+        # Calculate current allocation status
+        current_allocation = current_collateral_percentage
+
+        # Determine recommendation
+        if current_allocation < min_recommended:
+            recommendation = 'increase'
+            recommendation_text = f"Consider increasing collateral usage to {min_recommended}-{max_recommended}% (VIX: {vix_float:.1f})"
+            status = 'under_allocated'
+        elif current_allocation > max_recommended:
+            recommendation = 'decrease'
+            recommendation_text = f"Consider reducing collateral usage to {min_recommended}-{max_recommended}% (VIX: {vix_float:.1f})"
+            status = 'over_allocated'
+        else:
+            recommendation = 'maintain'
+            recommendation_text = f"Optimal allocation range {min_recommended}-{max_recommended}% (VIX: {vix_float:.1f})"
+            status = 'optimal'
+
+        # Calculate additional capacity
+        additional_capacity = max(0, max_recommended - current_allocation)
+        additional_capacity_dollars = (additional_capacity / 100) * total_account_value
+
+        # Calculate reduction needed
+        reduction_needed = max(0, current_allocation - max_recommended)
+        reduction_needed_dollars = (reduction_needed / 100) * total_account_value
+
+        return {
+            'vix_price': vix_float,
+            'vix_level': current_level,
+            'current_allocation': current_allocation,
+            'min_recommended': min_recommended,
+            'max_recommended': max_recommended,
+            'recommendation': recommendation,
+            'recommendation_text': recommendation_text,
+            'status': status,
+            'color': range_info['color'],
+            'additional_capacity': additional_capacity,
+            'additional_capacity_dollars': additional_capacity_dollars,
+            'reduction_needed': reduction_needed,
+            'reduction_needed_dollars': reduction_needed_dollars,
+            'volatility_description': {
+                'low_volatility': 'Low volatility - Conservative allocation',
+                'moderate_volatility': 'Moderate volatility - Balanced allocation',
+                'high_volatility': 'High volatility - Aggressive allocation',
+                'extreme_volatility': 'Extreme volatility - Maximum allocation'
+            }[current_level]
+        }
+
+    except Exception as e:
+        logger.error(f"Error calculating VIX-based allocation: {e}")
+        return None
 
 if __name__ == '__main__':
     logger.info("Starting Flask application...")
