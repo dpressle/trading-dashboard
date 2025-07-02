@@ -805,6 +805,11 @@
                                     <th>Market Value</th>
                                     <th>Avg Cost</th>
                                     <th>Unrealized P&L</th>
+                                    <th>
+                                        Unrealized P&L %
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Current P&L as percentage of cost basis (stocks) or premium received (options). Shows return on investment or profit realization."></i>
+                                    </th>
                                     <th>Realized P&L</th>
                                 </tr>
                             </thead>
@@ -820,6 +825,11 @@
                                     <td>${{ "%.2f"|format(row['avgCost']) }}</td>
                                     <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
                                         ${{ "%.2f"|format(row['unrealizedPnl']) }}
+                                    </td>
+                                    <td>
+                                        <span class="{% if row['pnl_percentage'] >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {{ "%.2f"|format(row['pnl_percentage']) }}%
+                                        </span>
                                     </td>
                                     <td class="{{ 'positive' if row['realizedPnl'] > 0 else 'negative' }}">
                                         ${{ "%.2f"|format(row['realizedPnl']) }}
@@ -848,6 +858,11 @@
                                     <th>Avg Price</th>
                                     <th>Avg Cost</th>
                                     <th>Unrealized P&L</th>
+                                    <th>
+                                        Unrealized P&L %
+                                        <i class="bi bi-info-circle ms-1" data-bs-toggle="tooltip" data-bs-placement="top"
+                                           title="Current P&L as percentage of premium received. Shows how much of the potential profit has been realized."></i>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -871,6 +886,11 @@
                                     <td>${{ "%.2f"|format(row['avgCost']) }}</td>
                                     <td class="{{ 'positive' if row['unrealizedPnl'] > 0 else 'negative' }}">
                                         ${{ "%.2f"|format(row['unrealizedPnl']) }}
+                                    </td>
+                                    <td>
+                                        <span class="{% if row['pnl_percentage'] >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">
+                                            {{ "%.2f"|format(row['pnl_percentage']) }}%
+                                        </span>
                                     </td>
                                 </tr>
                                 {% endif %}
@@ -972,7 +992,7 @@
                                 </div>
                                 <div class="col-md-3 col-sm-6 mb-3">
                                     <div class="text-center">
-                                        <div class="h4 mb-1 {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}text-danger{% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}text-warning{% else %}text-success{% endif %}">
+                                        <div class="h4 mb-1 {% if data.position_analytics.vix_allocation is defined %}text-{{ data.position_analytics.vix_allocation.color }}{% else %}{% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}text-danger{% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}text-warning{% else %}text-success{% endif %}{% endif %}">
                                             {{ "%.1f"|format(data.position_analytics.collateral_usage.collateral_percentage) }}%
                                         </div>
                                         <small class="text-muted">Collateral %</small>
@@ -1069,24 +1089,50 @@
                                     <small>{{ "%.1f"|format(data.position_analytics.collateral_usage.collateral_percentage) }}%</small>
                                 </div>
                                 <div class="progress" style="height: 8px;">
-                                    <div class="progress-bar {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}bg-danger{% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}bg-warning{% else %}bg-success{% endif %}"
-                                         role="progressbar"
-                                         style="width: {{ data.position_analytics.collateral_usage.collateral_percentage }}%"
-                                         aria-valuenow="{{ data.position_analytics.collateral_usage.collateral_percentage }}"
-                                         aria-valuemin="0"
-                                         aria-valuemax="100">
-                                    </div>
+                                    {% if data.position_analytics.vix_allocation is defined %}
+                                        <!-- Use VIX-based thresholds -->
+                                        <div class="progress-bar bg-{{ data.position_analytics.vix_allocation.color }}"
+                                             role="progressbar"
+                                             style="width: {{ data.position_analytics.collateral_usage.collateral_percentage }}%"
+                                             aria-valuenow="{{ data.position_analytics.collateral_usage.collateral_percentage }}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                        </div>
+                                    {% else %}
+                                        <!-- Fallback to static thresholds -->
+                                        <div class="progress-bar {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}bg-danger{% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}bg-warning{% else %}bg-success{% endif %}"
+                                             role="progressbar"
+                                             style="width: {{ data.position_analytics.collateral_usage.collateral_percentage }}%"
+                                             aria-valuenow="{{ data.position_analytics.collateral_usage.collateral_percentage }}"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                        </div>
+                                    {% endif %}
                                 </div>
                                 <div class="mt-2">
-                                    <small class="text-muted">
-                                        {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}
-                                            ⚠️ High collateral usage - Consider reducing position sizes
-                                        {% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}
-                                            ⚡ Moderate collateral usage - Monitor closely
-                                        {% else %}
-                                            ✅ Healthy collateral usage - Room for additional positions
-                                        {% endif %}
-                                    </small>
+                                    {% if data.position_analytics.vix_allocation is defined %}
+                                        <!-- Use VIX-based status messages -->
+                                        <small class="text-muted">
+                                            {% if data.position_analytics.vix_allocation.recommendation == 'increase' %}
+                                                📈 {{ data.position_analytics.vix_allocation.recommendation_text }}
+                                            {% elif data.position_analytics.vix_allocation.recommendation == 'decrease' %}
+                                                📉 {{ data.position_analytics.vix_allocation.recommendation_text }}
+                                            {% else %}
+                                                ✅ {{ data.position_analytics.vix_allocation.recommendation_text }}
+                                            {% endif %}
+                                        </small>
+                                    {% else %}
+                                        <!-- Fallback to static status messages -->
+                                        <small class="text-muted">
+                                            {% if data.position_analytics.collateral_usage.collateral_percentage > 50 %}
+                                                ⚠️ High collateral usage - Consider reducing position sizes
+                                            {% elif data.position_analytics.collateral_usage.collateral_percentage > 30 %}
+                                                ⚡ Moderate collateral usage - Monitor closely
+                                            {% else %}
+                                                ✅ Healthy collateral usage - Room for additional positions
+                                            {% endif %}
+                                        </small>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -2440,7 +2486,27 @@
         function showNotification(message, type) {
             // Create notification element
             const notification = document.createElement('div');
-            notification.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+
+            // Map notification types to Bootstrap alert classes
+            let alertClass = 'alert-info'; // default
+            switch(type) {
+                case 'success':
+                    alertClass = 'alert-success';
+                    break;
+                case 'error':
+                    alertClass = 'alert-danger';
+                    break;
+                case 'warning':
+                    alertClass = 'alert-warning';
+                    break;
+                case 'info':
+                    alertClass = 'alert-info';
+                    break;
+                default:
+                    alertClass = 'alert-info';
+            }
+
+            notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
             notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
             notification.innerHTML = `
                 ${message}

@@ -125,7 +125,8 @@ def fetch_stock_price(symbol):
     try:
         print(f"Fetching stock price for {symbol}...")
         # Make session to ensure proper session state
-        ibkr_client.client.make_session()
+        ibkr_client.initialize_brokerage_session()
+
         # Use stock_conid_by_symbol to get the contract ID
         conid_result = ibkr_client.client.stock_conid_by_symbol(symbol)
         if not conid_result.data or symbol not in conid_result.data:
@@ -206,68 +207,4 @@ def fetch_vix_price():
         return current_price
     except Exception as e:
         print(f"Error fetching VIX price: {e}")
-        return None
-
-def fetch_index_price(symbol):
-    """Fetch real-time index price for common indices"""
-    try:
-        print(f"Fetching index price for {symbol}...")
-        # Make session to ensure proper session state
-        ibkr_client.client.make_session()
-
-        # Common index contract IDs
-        index_conids = {
-            'VIX': '13455763',    # VIX volatility index (updated)
-            'SPX': '332',         # S&P 500 index
-            'NDX': '370',         # NASDAQ-100 index
-            'RUT': '1386',        # Russell 2000 index
-            'DJX': '169',         # Dow Jones Industrial Average
-            'VIX1D': '13455763',  # VIX (updated)
-        }
-
-        if symbol.upper() not in index_conids:
-            print(f"Index {symbol} not supported. Supported indices: {list(index_conids.keys())}")
-            return None
-
-        conid = index_conids[symbol.upper()]
-        print(f"Using contract ID for {symbol}: {conid}")
-
-        # Try different field codes for indices
-        fields = "31,84,86,87,88"  # Last price, Last size, High, Low, Open
-        quote_result = ibkr_client.client.live_marketdata_snapshot([conid], fields=fields)
-        print(f"Index quote result: {quote_result.data}")
-
-        if not quote_result.data:
-            print(f"No market data available for {symbol}")
-            return None
-
-        quote = quote_result.data[0]
-
-        # Try different price fields in order of preference
-        price_fields = ['31', '88', '86']  # Last price, Open, High
-        current_price = None
-
-        for field in price_fields:
-            current_price = quote.get(field)
-            if current_price is not None and current_price != '':
-                print(f"{symbol} price from field {field}: {current_price}")
-                break
-
-        if current_price is None:
-            print(f"No price data found in any field for {symbol}")
-            return None
-
-        # Remove 'C' prefix if present (when market is closed)
-        if isinstance(current_price, str) and current_price.startswith('C'):
-            print(f"Removing 'C' prefix from {symbol} price: {current_price}")
-            current_price = current_price[1:]
-
-        if current_price is not None:
-            print(f"Successfully fetched {symbol} price: ${current_price}")
-        else:
-            print(f"Could not extract {symbol} price from quote data")
-
-        return current_price
-    except Exception as e:
-        print(f"Error fetching {symbol} price: {e}")
         return None

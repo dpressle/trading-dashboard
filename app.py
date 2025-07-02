@@ -305,11 +305,12 @@ def calculate_stress_scenarios(position_data, greeks):
 
     return scenarios
 
-def calculate_put_annualized_returns(positions_df):
-    """Calculate annualized returns for put positions and identify those to close (< 12%)"""
+def calculate_option_annualized_returns(positions_df):
+    """Calculate annualized returns for option positions (both puts and calls) and identify those to close (< 12%)"""
     if positions_df.empty:
         return {
             'put_positions': [],
+            'call_positions': [],
             'positions_to_close': [],
             'total_collateral_tied': 0,
             'avg_annualized_return': 0,
@@ -319,11 +320,14 @@ def calculate_put_annualized_returns(positions_df):
                 'total_theta': 0,
                 'total_vega': 0,
                 'avg_prob_profit': 0,
-                'high_risk_positions': 0
+                'high_risk_positions': 0,
+                'total_put_theta': 0,
+                'total_call_theta': 0
             }
         }
 
     put_positions = []
+    call_positions = []
     positions_to_close = []
     total_collateral = 0
 
@@ -335,12 +339,16 @@ def calculate_put_annualized_returns(positions_df):
     total_prob_profit = 0
     high_risk_positions = 0
 
+    # Separate theta tracking for puts and calls
+    total_put_theta = 0
+    total_call_theta = 0
+
     for _, position in positions_df.iterrows():
         position_type = position.get('putOrCall', '')  # Original IBKR field
         asset_class = position.get('assetClass', '')  # Original IBKR field
 
-        # Only process put positions
-        if position_type != 'P' or asset_class != 'OPT':
+        # Process both put and call positions
+        if position_type not in ['P', 'C'] or asset_class != 'OPT':
             continue
 
         symbol = position.get('ticker', '')  # Original IBKR field
@@ -367,8 +375,14 @@ def calculate_put_annualized_returns(positions_df):
             if days_left <= 0:
                 continue  # Skip expired positions
 
-            # Calculate collateral (strike price * 100 * quantity for puts)
-            collateral_per_contract = strike * 100
+            # Calculate collateral (strike price * 100 * quantity for puts, different for calls)
+            if position_type == 'P':
+                collateral_per_contract = strike * 100  # Cash-secured puts
+            else:  # Calls
+                # For covered calls, collateral is the stock value
+                # For naked calls, it's more complex - using a simplified approach
+                collateral_per_contract = strike * 100  # Simplified for now
+
             total_collateral_for_position = abs(quantity) * collateral_per_contract
             total_collateral += total_collateral_for_position
 
@@ -400,19 +414,20 @@ def calculate_put_annualized_returns(positions_df):
 
             # Calculate Greeks - use real stock price if available, otherwise skip
             if current_stock_price is not None and current_stock_price > 0:
+                option_type_str = 'put' if position_type == 'P' else 'call'
                 greeks = calculate_black_scholes_greeks(
                     S=current_stock_price,
                     K=strike,
                     T=time_to_expiry,
                     r=risk_free_rate,
                     sigma=implied_vol,
-                    option_type='put'
+                    option_type=option_type_str
                 )
             else:
                 # Skip Greeks calculation if no real stock price
                 print(f"Warning: No real stock price available for {symbol}, skipping Greeks calculation")
                 greeks = {
-                    'delta': -0.5,
+                    'delta': -0.5 if position_type == 'P' else 0.5,
                     'gamma': 0.01,
                     'theta': -0.1,
                     'vega': 0.1,
@@ -436,7 +451,7 @@ def calculate_put_annualized_returns(positions_df):
             elif abs(greeks['delta']) > 0.5 or abs(greeks['gamma']) > 0.01 or abs(greeks['theta']) > 0.05:
                 risk_level = 'Medium'
 
-            put_position = {
+            option_position = {
                 'symbol': symbol,
                 'quantity': quantity,
                 'strike': strike,
@@ -453,14 +468,19 @@ def calculate_put_annualized_returns(positions_df):
                 'stress_scenarios': stress_scenarios,
                 'risk_level': risk_level,
                 'current_stock_price': current_stock_price,
-                'implied_volatility': greeks['implied_vol']
+                'implied_volatility': greeks['implied_vol'],
+                'option_type': position_type
             }
 
-            put_positions.append(put_position)
+            # Add to appropriate list based on option type
+            if position_type == 'P':
+                put_positions.append(option_position)
+            else:
+                call_positions.append(option_position)
 
             # Add to close list if return < 12%
             if annualized_return < 12:
-                positions_to_close.append(put_position)
+                positions_to_close.append(option_position)
 
             # Aggregate risk metrics
             total_delta += greeks['delta'] * abs(quantity)
@@ -469,15 +489,22 @@ def calculate_put_annualized_returns(positions_df):
             total_vega += greeks['vega'] * abs(quantity)
             total_prob_profit += greeks['prob_profit']
 
+            # Track theta by option type
+            if position_type == 'P':
+                total_put_theta += greeks['theta'] * abs(quantity)
+            else:
+                total_call_theta += greeks['theta'] * abs(quantity)
+
         except Exception as e:
             print(f"Error calculating return for {symbol}: {e}")
             continue
 
-    # Calculate average annualized return
+    # Calculate average annualized return across all options
+    all_positions = put_positions + call_positions
     avg_return = 0
-    if put_positions:
-        avg_return = sum(p['annualized_return'] for p in put_positions) / len(put_positions)
-        total_prob_profit = total_prob_profit / len(put_positions)
+    if all_positions:
+        avg_return = sum(p['annualized_return'] for p in all_positions) / len(all_positions)
+        total_prob_profit = total_prob_profit / len(all_positions)
 
     # Risk summary
     risk_summary = {
@@ -487,16 +514,26 @@ def calculate_put_annualized_returns(positions_df):
         'total_vega': total_vega,
         'avg_prob_profit': total_prob_profit,
         'high_risk_positions': high_risk_positions,
-        'total_positions': len(put_positions)
+        'total_positions': len(all_positions),
+        'total_put_theta': total_put_theta,
+        'total_call_theta': total_call_theta,
+        'put_positions_count': len(put_positions),
+        'call_positions_count': len(call_positions)
     }
 
     return {
         'put_positions': put_positions,
+        'call_positions': call_positions,
         'positions_to_close': positions_to_close,
         'total_collateral_tied': total_collateral,
         'avg_annualized_return': avg_return,
         'risk_summary': risk_summary
     }
+
+# Keep the old function name for backward compatibility
+def calculate_put_annualized_returns(positions_df):
+    """Backward compatibility function - now calls the enhanced option calculation"""
+    return calculate_option_annualized_returns(positions_df)
 
 def calculate_stock_concentration_analysis(put_positions):
     """Calculate stock concentration analysis to identify over-investment in specific stocks"""
@@ -795,9 +832,22 @@ def calculate_position_analytics(positions_df, total_account_value=0, put_collat
         asset_class = position.get('assetClass', '')  # Original IBKR field
         unrealized_pnl = position.get('unrealizedPnl', 0)  # Original IBKR field
         mkt_value = position.get('mktValue', 0)  # Original IBKR field
+        avg_price = position.get('avgPrice', 0)  # Original IBKR field
 
         # Calculate position value
         position_value = abs(mkt_value) if mkt_value != 0 else abs(quantity) * current_price
+
+        # Calculate P&L percentage
+        # For options: P&L % = (Current P&L / Premium received) - shows how much of potential profit realized
+        # For stocks: P&L % = (Current P&L / Cost basis) - shows return on investment
+        if asset_class == 'OPT' and avg_price != 0:
+            # For options, use premium received as the base
+            pnl_percentage = (unrealized_pnl / (abs(quantity) * avg_price)) if quantity != 0 and avg_price != 0 else 0
+        elif cost_basis != 0:
+            # For stocks, use cost basis as the base
+            pnl_percentage = (unrealized_pnl / abs(cost_basis)) if cost_basis != 0 else 0
+        else:
+            pnl_percentage = 0
 
         # Update totals
         analytics['total_value'] += position_value
@@ -965,7 +1015,7 @@ def get_ibkr_data():
         dfs['performance'] = {}
         dfs['positions'] = pd.DataFrame()
         dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame(), 0, 0)
-        dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
+        dfs['put_analysis'] = calculate_option_annualized_returns(pd.DataFrame())
         dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
         dfs['itm_analysis'] = calculate_itm_analysis([])
         return dfs
@@ -1069,8 +1119,27 @@ def get_ibkr_data():
             if col in df.columns:
                 df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
 
-        # Calculate put annualized returns using original field names (before date formatting)
-        dfs['put_analysis'] = calculate_put_annualized_returns(df)
+        # Calculate P&L percentage for each position
+        def calculate_pnl_percentage(row):
+            quantity = row.get('position', 0)
+            unrealized_pnl = row.get('unrealizedPnl', 0)
+            avg_price = row.get('avgPrice', 0)
+            cost_basis = row.get('avgCost', 0)
+            asset_class = row.get('assetClass', '')
+
+            if asset_class == 'OPT' and avg_price != 0:
+                # For options, use premium received as the base
+                return (unrealized_pnl / (abs(quantity) * avg_price)) if quantity != 0 and avg_price != 0 else 0
+            elif cost_basis != 0:
+                # For stocks, use cost basis as the base
+                return (unrealized_pnl / abs(cost_basis)) if cost_basis != 0 else 0
+            else:
+                return 0
+
+        df['pnl_percentage'] = df.apply(calculate_pnl_percentage, axis=1)
+
+        # Calculate option annualized returns using original field names (before date formatting)
+        dfs['put_analysis'] = calculate_option_annualized_returns(df)
 
         # Format expiration dates from YYYYMMDD to MMM DD, YYYY (after put analysis)
         if 'expiry' in df.columns:
@@ -1090,7 +1159,7 @@ def get_ibkr_data():
 
         dfs['positions'] = df
 
-        # Get total put collateral from put analysis
+        # Get total option collateral from option analysis
         put_collateral = dfs['put_analysis'].get('total_collateral_tied', 0)
 
         # Calculate position analytics using original field names with collateral info
@@ -1106,9 +1175,10 @@ def get_ibkr_data():
                 print(f"VIX-based allocation calculated: {vix_allocation['recommendation_text']}")
 
         # Calculate stock concentration analysis
-        if dfs['put_analysis']['put_positions']:
-            dfs['stock_concentration'] = calculate_stock_concentration_analysis(dfs['put_analysis']['put_positions'])
-            # Calculate ITM analysis with real stock prices
+        all_option_positions = dfs['put_analysis']['put_positions'] + dfs['put_analysis']['call_positions']
+        if all_option_positions:
+            dfs['stock_concentration'] = calculate_stock_concentration_analysis(all_option_positions)
+            # Calculate ITM analysis with real stock prices (only for puts)
             dfs['itm_analysis'] = calculate_itm_analysis(dfs['put_analysis']['put_positions'])
         else:
             dfs['stock_concentration'] = calculate_stock_concentration_analysis([])
@@ -1117,7 +1187,7 @@ def get_ibkr_data():
     else:
         # Return empty DataFrames and analytics when no positions
         dfs['positions'] = pd.DataFrame()
-        dfs['put_analysis'] = calculate_put_annualized_returns(pd.DataFrame())
+        dfs['put_analysis'] = calculate_option_annualized_returns(pd.DataFrame())
         dfs['position_analytics'] = calculate_position_analytics(pd.DataFrame(), total_account_value, 0)
 
         # Calculate VIX-based allocation recommendations even with no positions
@@ -1146,21 +1216,40 @@ def convert_dataframes_to_json(data):
     elif isinstance(data, list):
         return [convert_dataframes_to_json(item) for item in data]
     elif isinstance(data, pd.DataFrame):
-        # Convert DataFrame to list of dictionaries
-        return data.to_dict('records')
+        # Convert DataFrame to list of dictionaries, handling NaN values
+        records = data.to_dict('records')
+        # Clean NaN values from records
+        cleaned_records = []
+        for record in records:
+            cleaned_record = {}
+            for key, value in record.items():
+                if pd.isna(value):
+                    cleaned_record[key] = None
+                else:
+                    cleaned_record[key] = value
+            cleaned_records.append(cleaned_record)
+        return cleaned_records
     elif isinstance(data, pd.Series):
-        # Convert Series to dictionary, handling None keys
+        # Convert Series to dictionary, handling None keys and NaN values
         series_dict = data.to_dict()
         result = {}
         for key, value in series_dict.items():
             safe_key = str(key) if key is not None else "null"
-            result[safe_key] = convert_dataframes_to_json(value)
+            if pd.isna(value):
+                result[safe_key] = None
+            else:
+                result[safe_key] = convert_dataframes_to_json(value)
         return result
     elif isinstance(data, (datetime, pd.Timestamp)):
         # Convert datetime objects to ISO format strings
         return data.isoformat()
-    elif isinstance(data, (int, float, str, bool, type(None))):
+    elif isinstance(data, (int, str, bool, type(None))):
         # These are already JSON serializable
+        return data
+    elif isinstance(data, float):
+        # Handle NaN and infinity values
+        if pd.isna(data) or math.isinf(data):
+            return None
         return data
     else:
         # For any other types, convert to string
@@ -1194,7 +1283,7 @@ def index():
             'performance': {},
             'positions': pd.DataFrame(),
             'position_analytics': calculate_position_analytics(pd.DataFrame(), 0, 0),
-            'put_analysis': calculate_put_annualized_returns(pd.DataFrame()),
+            'put_analysis': calculate_option_annualized_returns(pd.DataFrame()),
             'stock_concentration': calculate_stock_concentration_analysis([]),
             'itm_analysis': calculate_itm_analysis([])
         }
